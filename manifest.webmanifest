@@ -1,0 +1,20 @@
+{
+    "name": "Сила × 90",
+    "short_name": "Сила90",
+    "description": "Минималистичный трекер дисциплины: таймер, подписки, шторм.",
+    "start_url": "/index.html",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#141821",
+    "theme_color": "#141821",
+    "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+        { "src": "/icons/apple-touch-icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/apple-touch-icon-167.png", "sizes": "167x167", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/apple-touch-icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/apple-touch-icon-120.png", "sizes": "120x120", "type": "image/png", "purpose": "any" }
+    ]
+}

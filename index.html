@@ -1,0 +1,1676 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8">
+        <title>Сила × 90</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="color-scheme" content="light dark">
+        <!-- Font Awesome (локальный путь, как у тебя) -->
+        <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+
+        <!-- Manifest -->
+        <link rel="manifest" href="/manifest.webmanifest">
+
+        <!-- Цвет статус-бара и системных UI (Android + Chrome iOS) -->
+        <meta name="theme-color" content="#141821" media="(prefers-color-scheme: dark)">
+        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+
+        <!-- iOS PWA full-screen -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <!-- Варианты: default / black / black-translucent. Для Dynamic Island чаще лучше translucent -->
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+        <meta name="apple-mobile-web-app-title" content="Сила × 90">
+
+        <!-- iOS иконки -->
+        <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" sizes="180x180">
+        <link rel="apple-touch-icon" href="icons/apple-touch-icon-167.png" sizes="167x167">
+        <link rel="apple-touch-icon" href="icons/apple-touch-icon-152.png" sizes="152x152">
+        <link rel="apple-touch-icon" href="icons/apple-touch-icon-120.png" sizes="120x120">
+
+        <style>
+            :root {
+                /* Light */
+                --bg:#ffffff;
+                --fg: #0f1116;
+                --muted: #677085;
+                --card: #f4f6fb;
+                --accent: #4c7df0;
+                --accent-weak: #e8efff;
+                --ok: #19b36b;
+                --danger: #e85a6a;
+                --warning: #f0b429;
+                --shadow: 0 8px 28px rgba(0, 0, 0, .08);
+                --radius: 16px;
+                --overlay: color-mix(in oklab, #0e0f14 35%, transparent);
+            }
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    /* Dark — ярче, без абсолютного чёрного */
+                    --bg:#141821;
+                    --fg: #e9ecf5;
+                    --muted: #b3bad0;
+                    --card: #1a202b;
+                    --accent: #8fb0ff;
+                    --accent-weak: #223049;
+                    --ok: #38d68a;
+                    --danger: #ff7a86;
+                    --warning: #ffd06a;
+                    --shadow: 0 16px 36px rgba(0, 0, 0, .45);
+                    --overlay: color-mix(in oklab, #0b0d12 55%, transparent);
+                }
+            }
+
+            * {
+                box-sizing: border-box
+            }
+            html, body {
+                height: 100%;
+                margin: 0;
+                background: var(--bg);
+                color: var(--fg);
+                font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Inter, system-ui, Arial;
+                -webkit-tap-highlight-color: transparent
+            }
+
+            .wrap {
+                min-height: 100dvh;
+                display: grid;
+                grid-template-rows: auto 1fr auto;
+                gap: 16px;
+                padding: 16px;
+                padding-left: calc(16px + env(safe-area-inset-left));
+                padding-right: calc(16px + env(safe-area-inset-right));
+                padding-top: calc(16px + env(safe-area-inset-top));
+                padding-bottom: calc(16px + env(safe-area-inset-bottom));
+                max-width: 720px;
+                margin: 0 auto;
+                animation: fadeIn .4s ease both;
+            }
+            header, footer {
+                display: flex;
+                align-items: center;
+                justify-content: space-between
+            }
+            .title {
+                display: flex;
+                align-items: center;
+                gap: 10px
+            }
+            .title-chip {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 12px;
+                border-radius: 999px;
+                background: var(--accent-weak);
+                color: var(--accent);
+                font-weight: 900;
+                letter-spacing: .3px;
+                overflow: hidden;
+            }
+            .title-chip::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                background: linear-gradient(120deg, rgba(255, 255, 255, .0) 0%, rgba(255, 255, 255, .35) 50%, rgba(255, 255, 255, 0) 100%);
+                transform: translateX(-150%);
+                filter: blur(6px);
+                animation: shine 3.6s ease-in-out infinite .6s;
+            }
+            .title small {
+                color: var(--muted);
+                font-size: 12px
+            }
+            .iconbtn {
+                border: none;
+                background: transparent;
+                padding: 10px;
+                border-radius: 12px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                overflow: hidden
+            }
+            .icon {
+                font-size: 22px;
+                line-height: 1;
+                width: 22px;
+                height: 22px;
+                display: inline-block
+            }
+
+            .card {
+                background: var(--card);
+                border-radius: var(--radius);
+                box-shadow: var(--shadow);
+                padding: 16px;
+                animation: raise .35s ease both
+            }
+
+            .timer {
+                text-align: center;
+                display: grid;
+                gap: 16px
+            }
+            .timer__value {
+                font-variant-numeric: tabular-nums;
+                font-size: clamp(28px, 8vw, 44px);
+                font-weight: 800;
+                letter-spacing: .5px
+            }
+            .timer__since {
+                font-size: 13px;
+                color: var(--muted)
+            }
+            .badges {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                justify-content: center
+            }
+            .badge {
+                font-size: 12px;
+                padding: 6px 10px;
+                border-radius: 999px;
+                background: var(--accent-weak);
+                color: var(--accent);
+                animation: pop .24s ease both
+            }
+            .pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 10px;
+                border-radius: 999px;
+                font-size: 12px;
+                background: color-mix(in oklab, var(--warning) 18%, transparent);
+                color: var(--warning);
+                animation: blink 1.8s ease-in-out infinite
+            }
+
+            .balance {
+                display: grid;
+                gap: 12px
+            }
+            .balance__row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 15px
+            }
+            .balance__value {
+                font-variant-numeric: tabular-nums;
+                font-weight: 800;
+                font-size: 22px;
+                transition: transform .15s ease
+            }
+            .progress {
+                height: 8px;
+                background: rgba(127, 127, 150, .25);
+                border-radius: 999px;
+                overflow: hidden
+            }
+            .progress > i {
+                display: block;
+                height: 100%;
+                width: 0%;
+                background: var(--accent);
+                transition: width .6s cubic-bezier(.22, .61, .36, 1);
+                position: relative
+            }
+            .progress > i::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, .25) 30%, rgba(255, 255, 255, 0) 60%);
+                transform: translateX(-100%);
+                animation: barshine 2.4s linear infinite;
+            }
+
+            .actions {
+                display: grid;
+                gap: 10px
+            }
+            .btn {
+                width: 100%;
+                border: none;
+                border-radius: 12px;
+                padding: 14px 16px;
+                font-size: 16px;
+                font-weight: 700;
+                letter-spacing: .2px;
+                background: var(--accent);
+                color: #fff;
+                box-shadow: 0 8px 20px rgba(76, 125, 240, .35);
+                position: relative;
+                overflow: hidden;
+                transform: translateZ(0)
+            }
+            .btn:disabled {
+                opacity: .5;
+                box-shadow: none
+            }
+            .btn--ghost {
+                background: transparent;
+                color: var(--accent);
+                border: 1px solid var(--accent);
+                box-shadow: none
+            }
+            .btn--ok {
+                background: var(--ok)
+            }
+            .btn--danger {
+                background: var(--danger)
+            }
+            .btn--warning {
+                background: var(--warning);
+                color: #111
+            }
+            .btn:active {
+                transform: scale(.99)
+            }
+
+            .muted {
+                color: var(--muted)
+            }
+            footer {
+                font-size: 12px;
+                color: var(--muted);
+                justify-content: center
+            }
+
+
+            /* Overlays / sheets */
+            .overlay {
+                position: fixed;
+                inset: 0;
+                width: 100%;
+                height: 100dvh;
+                background: var(--overlay);
+                display: none;
+                align-items: flex-end;
+                justify-content: center;
+                padding: 16px;
+                padding-bottom: calc(16px + env(safe-area-inset-bottom));
+                z-index: 50;
+                backdrop-filter: saturate(1.2) blur(8px)
+            }
+            .overlay--show {
+                display: flex
+            }
+            .sheet {
+                width: 100%;
+                max-width: 720px;
+                background: var(--bg);
+                border-radius: 20px 20px 16px 16px;
+                box-shadow: var(--shadow);
+                padding: 16px;
+                display: grid;
+                gap: 12px;
+                animation: slideUp .22s cubic-bezier(.22, .61, .36, 1)
+            }
+            .sheet h3 {
+                margin: 0;
+                font-size: 16px
+            }
+            .field {
+                display: grid;
+                gap: 6px
+            }
+            .field label {
+                font-size: 13px;
+                color: var(--muted)
+            }
+            input[type="datetime-local"] {
+                width: 100%;
+                border: 1px solid rgba(127, 127, 150, .35);
+                background: var(--card);
+                color: var(--fg);
+                border-radius: 12px;
+                padding: 12px;
+                font-size: 15px;
+                transition: border-color .15s ease, box-shadow .15s ease
+            }
+            input[type="datetime-local"]:focus {
+                outline: none;
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent)
+            }
+            .row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px
+            }
+            .divider {
+                height: 1px;
+                background: rgba(127, 127, 150, .25);
+                margin: 8px 0
+            }
+            .check {
+                display: inline-flex;
+                gap: 10px;
+                align-items: center;
+                padding: 10px 0
+            }
+            .check input {
+                width: 18px;
+                height: 18px
+            }
+
+            .toast {
+                position: fixed;
+                bottom: calc(16px + env(safe-area-inset-bottom));
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--bg);
+                color: var(--fg);
+                border: 1px solid rgba(127, 127, 150, .35);
+                border-radius: 12px;
+                padding: 10px 12px;
+                font-size: 13px;
+                box-shadow: var(--shadow);
+                display: none;
+                z-index: 60
+            }
+            .toast--show {
+                display: block;
+                animation: pop .18s ease
+            }
+
+            .mono {
+                font-variant-numeric: tabular-nums
+            }
+
+
+            /* Qty control */
+            .qty {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px;
+                border: 1px solid rgba(127, 127, 150, .35);
+                background: var(--card);
+                border-radius: 12px
+            }
+            .qty__btn {
+                border: none;
+                background: var(--bg);
+                border: 1px solid rgba(127, 127, 150, .35);
+                width: 42px;
+                height: 42px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                position: relative;
+                overflow: hidden
+            }
+            .qty__val {
+                min-width: 56px;
+                text-align: center;
+                font-weight: 800;
+                font-size: 18px;
+                transition: transform .12s ease
+            }
+
+
+            /* Done sheet — компактный вид */
+            .done__row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px;
+                border: 1px solid rgba(127, 127, 150, .35);
+                border-radius: 12px;
+                background: var(--bg)
+            }
+            .done__chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 10px;
+                border-radius: 999px;
+                background: color-mix(in oklab, var(--ok) 18%, transparent);
+                color: var(--ok);
+                font-weight: 800
+            }
+            .done__dt {
+                font-size: 12px;
+                color: var(--muted)
+            }
+            .done__award {
+                font-size: 14px
+            }
+
+
+            /* History list */
+            .history {
+                display: grid;
+                gap: 8px;
+                max-height: 50dvh;
+                overflow: auto
+            }
+            .history__item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px;
+                border-radius: 10px;
+                background: var(--card);
+                border: 1px solid rgba(127, 127, 150, .25);
+                animation: fadeIn .2s ease
+            }
+            .tag {
+                font-size: 12px;
+                padding: 4px 8px;
+                border-radius: 999px
+            }
+            .tag--spend {
+                background: color-mix(in oklab, var(--danger) 15%, transparent);
+                color: var(--danger)
+            }
+            .tag--bonus {
+                background: color-mix(in oklab, var(--ok) 15%, transparent);
+                color: var(--ok)
+            }
+
+
+            /* Quote */
+            .quote {
+                display: grid;
+                gap: 8px;
+                text-align: center;
+                padding: 12px;
+                border-radius: 14px;
+                background: linear-gradient(135deg, color-mix(in oklab, var(--accent) 12%, transparent), transparent)
+            }
+            .quote__text {
+                font-style: italic;
+                transition: opacity .25s ease
+            }
+            .quote__author {
+                font-size: 12px;
+                color: var(--muted);
+                transition: opacity .25s ease
+            }
+
+
+            /* Artifact (goal 90d) */
+            .artifact {
+                display: grid;
+                place-items: center;
+                padding: 16px
+            }
+            .orb {
+                --pct: 0%;
+                position: relative;
+                width: 160px;
+                height: 160px;
+                border-radius: 50%;
+                background: radial-gradient(120px 120px at 30% 30%, color-mix(in oklab, var(--accent) 30%, transparent), transparent 60%),
+                    radial-gradient(100px 100px at 70% 70%, color-mix(in oklab, var(--ok) 25%, transparent), transparent 60%),
+                    linear-gradient(120deg, color-mix(in oklab, var(--accent) 15%, transparent), transparent);
+                filter: saturate(1.2);
+                overflow: hidden;
+                animation: float 6s ease-in-out infinite;
+            }
+            .orb::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: conic-gradient(from 0deg, var(--accent) var(--pct), rgba(127, 127, 150, .25) 0);
+                -webkit-mask-image: radial-gradient(circle 68px at center, transparent 64px, black 65px);
+                mask-image: radial-gradient(circle 68px at center, transparent 64px, black 65px);
+                -webkit-mask-repeat: no-repeat;
+                mask-repeat: no-repeat;
+            }
+            .orb::after {
+                content: "";
+                position: absolute;
+                inset: -40%;
+                background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, .35), transparent 35%);
+                animation: shimmer 4s linear infinite;
+                pointer-events: none;
+            }
+            .orb__label {
+                margin-top: 8px;
+                font-size: 13px;
+                color: var(--muted)
+            }
+            .orb__big {
+                position: absolute;
+                inset: 0;
+                display: grid;
+                place-items: center;
+                font-weight: 900;
+                font-size: 22px;
+                text-shadow: 0 2px 8px rgba(0, 0, 0, .2)
+            }
+
+
+            /* Craving (Шторм) */
+            .seg {
+                display: flex;
+                gap: 8px
+            }
+            .seg .btn {
+                border: 1px solid rgba(127, 127, 150, .35);
+                background: var(--bg);
+                color: var(--fg)
+            }
+            .seg .btn.selected {
+                border-color: var(--accent);
+                background: var(--accent-weak)
+            }
+            .status {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px;
+                border: 1px solid rgba(127, 127, 150, .35);
+                border-radius: 12px;
+                background: var(--bg)
+            }
+            .status i {
+                opacity: .9
+            }
+
+
+            /* Confirm custom modal */
+            .confirm__txt {
+                font-size: 14px
+            }
+            .confirm__row {
+                display: flex;
+                justify-content: space-between;
+                gap: 8px
+            }
+
+
+            /* Animations */
+            @keyframes pop{
+                0% {
+                    transform: scale(.96);
+                    opacity: 0
+                }
+                100% {
+                    transform: scale(1);
+                    opacity: 1
+                }
+            }
+            @keyframes pulse{
+                0% {
+                    transform: scale(1);
+                    opacity: .95
+                }
+                50% {
+                    transform: scale(1.035);
+                    opacity: 1
+                }
+                100% {
+                    transform: scale(1);
+                    opacity: .95
+                }
+            }
+            @keyframes raise{
+                0% {
+                    transform: translateY(6px);
+                    opacity: 0
+                }
+                100% {
+                    transform: translateY(0);
+                    opacity: 1
+                }
+            }
+            @keyframes fadeIn{
+                from {
+                    opacity: 0
+                }
+                to {
+                    opacity: 1
+                }
+            }
+            @keyframes slideUp{
+                from {
+                    transform: translateY(16px);
+                    opacity: .6
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1
+                }
+            }
+            @keyframes shimmer{
+                to {
+                    transform: rotate(360deg)
+                }
+            }
+            @keyframes shine{
+                to {
+                    transform: translateX(150%)
+                }
+            }
+            @keyframes barshine{
+                to {
+                    transform: translateX(120%)
+                }
+            }
+            @keyframes blink{
+                0%, 100% {
+                    filter: saturate(1)
+                }
+                50% {
+                    filter: saturate(1.4)
+                }
+            }
+            @keyframes float{
+                0%, 100% {
+                    transform: translateY(0)
+                }
+                50% {
+                    transform: translateY(-4px)
+                }
+            }
+            .pulse {
+                animation: pulse .45s ease
+            }
+
+
+            /* Reduced motion */
+            @media (prefers-reduced-motion: reduce) {
+                * {
+                    animation: none !important;
+                    transition: none !important
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrap">
+            <header>
+                <div class="title">
+                    <span class="title-chip"><i class="fa-solid fa-hand-fist"></i> Сила × 90</span>
+                </div>
+                <div style=" display:flex;gap:6px">
+                    <button class="iconbtn" id="openHistory" aria-label="История">
+                        <i class="fa-solid fa-clock-rotate-left icon" aria-hidden="true"></i>
+                    </button>
+                    <button class="iconbtn" id="openSettings" aria-label="Настройки">
+                        <i class="fa-solid fa-gear icon" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </header>
+
+            <main class="card">
+                <section class="timer">
+                    <div class="timer__value" id="timer">00 дн • 00:00:00</div>
+                    <div class="timer__since muted" id="sinceLabel">с …</div>
+                    <div class="badges">
+                        <span class="badge" id="rateBadge">3 подписки / сутки</span>
+                        <span class="badge" id="testBadge" style=" display:none;">Тест: +24ч</span>
+                        <span class="pill" id="cravingPill" style=" display:none;"><i class="fa-solid fa-bolt"></i> шторм активен</span>
+                    </div>
+                </section>
+
+                <div class="divider"></div>
+
+                <section class="artifact">
+                    <div class="orb" id="orb"><div class="orb__big" id="orbPct">0.00%</div></div>
+                    <div class="orb__label">цель: 90 дн</div>
+                </section>
+
+                <div class="divider"></div>
+
+                <section class="balance">
+                    <div class="balance__row">
+                        <span>Баланс подписок</span>
+                        <span class="balance__value mono" id="balanceVal">0</span>
+                    </div>
+                    <div class="progress" aria-label="Прогресс до следующей подписки">
+                        <i id="progressBar" style=" width:0%"></i>
+                    </div>
+                    <div class="balance__row muted">
+                        <span>Следующая подписка через</span>
+                        <span class="mono" id="eta">—</span>
+                    </div>
+                </section>
+
+                <div class="divider"></div>
+
+                <section class="actions">
+                    <button class="btn" id="spendBtn">
+                        <i class="fa-brands fa-twitch icon" style=" margin-right:8px;vertical-align:middle" aria-hidden="true"></i>
+                        Списать подписки
+                    </button>
+                    <button class="btn btn--warning" id="cravingBtn">
+                        <i class="fa-solid fa-bolt icon" style=" margin-right:8px;vertical-align:middle"></i>
+                        Шторм
+                    </button>
+                </section>
+
+                <div class="divider"></div>
+
+                <section class="quote">
+                    <div class="quote__text" id="quoteText">«Дисциплина — это свобода.»</div>
+                    <div class="quote__author" id="quoteAuthor">— Джоко Уиллинк</div>
+                </section>
+            </main>
+
+            <footer>Без истерик. Просто делать своё.</footer>
+        </div>
+
+        <!-- Настройки -->
+        <div class="overlay" id="sheetSettings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+            <div class="sheet" role="document">
+                <h3 id="settingsTitle">Настройки</h3>
+                <div class="field">
+                    <label for="startAt">Дата и время начала отсчёта</label>
+                    <input type="datetime-local" id="startAt">
+                    <small class="muted">Хранится в UTC, ввод/отображение — по местному времени.</small>
+                </div>
+                <label class="check" style=" display:none">
+                    <input type="checkbox" id="testMode">
+                    <span>Режим тестирования (к текущему времени +24ч)</span>
+                </label>
+                <div class="divider"></div>
+                <button class="btn btn--ghost" id="softReset">Сбросить данные (начать с сейчас)</button>
+                <div class="row">
+                    <button class="btn btn--ghost" id="closeSettings">Отмена</button>
+                    <button class="btn" id="saveSettings">Сохранить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ввод списания -->
+        <div class="overlay" id="sheetSpend" role="dialog" aria-modal="true" aria-labelledby="spendTitle">
+            <div class="sheet" role="document">
+                <h3 id="spendTitle">Списать подписки</h3>
+                <div class="field">
+                    <label>Количество</label>
+                    <div class="qty" role="group" aria-label="Количество подписок">
+                        <button class="qty__btn" id="qtyMinus" aria-label="Минус"><i class="fa-solid fa-minus"></i></button>
+                        <div class="qty__val mono" id="qtyVal">1</div>
+                        <button class="qty__btn" id="qtyPlus" aria-label="Плюс"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <small class="muted">От 1 до доступного баланса.</small>
+                </div>
+                <div class="row">
+                    <button class="btn btn--ghost" id="cancelSpend">Отмена</button>
+                    <button class="btn" id="goConfirm">Списать</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Подтверждение списания -->
+        <div class="overlay" id="sheetConfirm" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+            <div class="sheet" role="document">
+                <h3 id="confirmTitle">Подтвердить списание?</h3>
+                <p>Вы уверены, что хотите списать <strong class="mono" id="confirmQty">0</strong> подписок?</p>
+                <div class="row">
+                    <button class="btn btn--ghost" id="backFromConfirm">Назад</button>
+                    <button class="btn btn--ok" id="confirmYes">Подтвердить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Итог (списание/бонус) -->
+        <div class="overlay" id="sheetDone" role="dialog" aria-modal="true" aria-labelledby="doneTitle">
+            <div class="sheet" role="document">
+                <div class="done__row">
+                    <div>
+                        <div class="done__dt">Дата/время: <span class="mono" id="doneDt">—</span></div>
+                        <div class="done__award">Сумма: <strong class="mono" id="doneQty">0</strong></div>
+                    </div>
+                    <div class="done__chip" id="doneChip"><i class="fa-solid fa-check"></i> Готово</div>
+                </div>
+                <button class="btn" id="closeDone">Ок</button>
+            </div>
+        </div>
+
+        <!-- История -->
+        <div class="overlay" id="sheetHistory" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+            <div class="sheet" role="document">
+                <h3 id="historyTitle">История</h3>
+                <div class="history" id="historyList"></div>
+                <div class="row" style=" grid-template-columns:1fr;">
+                    <button class="btn" id="closeHistory">Закрыть</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шторм -->
+        <div class="overlay" id="sheetCraving" role="dialog" aria-modal="true" aria-labelledby="cravingTitle">
+            <div class="sheet" role="document">
+                <h3 id="cravingTitle">Шторм</h3>
+
+                <div class="status" id="crvStatus">
+                    <i class="fa-solid fa-cloud-bolt"></i>
+                    <div>
+                        <div class="muted">Статус</div>
+                        <div id="crvStatusLine">нет активного шторма</div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Уровень</label>
+                    <div class="seg">
+                        <button class="btn" data-level="m">Средняя</button>
+                        <button class="btn" data-level="s">Сильная</button>
+                        <button class="btn" data-level="x">Экстра</button>
+                    </div>
+                    <small class="muted">Бонус за завершение: <span id="crvBonusPreview" class="mono">+1</span></small>
+                </div>
+
+                <div id="crvTimes" class="field" style=" display:none;">
+                    <div class="muted">Начало: <span class="mono" id="crvStartDt">—</span></div>
+                    <div>Длится: <strong class="mono" id="crvElapsed">—</strong></div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div id="crvActionsIdle" class="row">
+                    <button class="btn btn--ghost" id="closeCraving">Закрыть</button>
+                    <button class="btn btn--warning" id="cravingStart">Зарегистрировать</button>
+                </div>
+
+                <div id="crvActionsActive" class="row" style=" display:none;">
+                    <button class="btn btn--ghost" id="cravingCancel">Сбросить</button>
+                    <button class="btn btn--ok" id="cravingFinish">Завершить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Кастомное подтверждение завершения шторма -->
+        <div class="overlay" id="sheetCravingConfirm" role="dialog" aria-modal="true" aria-labelledby="crvConfirmTitle">
+            <div class="sheet" role="document">
+                <h3 id="crvConfirmTitle">Завершить шторм?</h3>
+                <p class="confirm__txt">
+                    Уровень: <strong id="crvConfirmLevel">—</strong><br>
+                    Бонус: <strong class="mono" id="crvConfirmBonus">+0</strong>
+                </p>
+                <div class="confirm__row">
+                    <button class="btn btn--ghost" id="crvConfirmBack">Назад</button>
+                    <button class="btn btn--ok" id="crvConfirmYes">Подтвердить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Конфетти -->
+        <canvas id="confetti" style=" position:fixed;inset:0;pointer-events:none;z-index:70;display:none;"></canvas>
+
+        <div class="toast" id="toast">Сохранено</div>
+
+        <script>
+            /* ================= Storage / Defaults ================= */
+            const LS = {
+                startTs:  'clean.startTs',
+
+                // ms epoch (UTC)
+                spent:  'clean.spent',
+                bonus:  'clean.bonus',
+                test:  'clean.testMode',
+                history:  'clean.history',
+                craving:  'clean.craving'
+            };
+            const DEFAULTS = { TEST_MODE:  false, GOAL_DAYS:  90 };
+
+            const $ = s => document.querySelector(s);
+            const nowMs = () => Date.now();
+            const clamp = (n,  a,  b)  =>  Math.max(a,  Math.min(b,  n));
+            const vibr = () => {
+
+                if ('vibrate' in navigator) navigator.vibrate(10);
+
+            };
+
+            /* overlays helpers */
+            const openSheet = el => {
+
+                el.classList.add('overlay--show');
+
+                vibr();
+
+            };
+            const closeSheet = el => el.classList.remove('overlay--show');
+
+            /* ========= Ripple (на кнопках) ========= */
+            function attachRipple(root  =  document)  {
+                const targets = root.querySelectorAll('.btn, .iconbtn, .qty__btn');
+                targets.forEach(el  =>  {
+                    el.addEventListener('pointerdown', (e)  =>  {
+                        const r = document.createElement('span');
+                        const rect = el.getBoundingClientRect();
+                        const size = Math.max(rect.width, rect.height);
+                        r.style.position  =  'absolute';
+                        r.style.left = (e.clientX  -  rect.left - size  /  2)  +  'px';
+                        r.style.top = (e.clientY  -  rect.top - size  /  2)  +  'px';
+                        r.style.width = r.style.height = size  +  'px';
+                        r.style.borderRadius  =  '50%';
+                        r.style.background  =  'rgba(255,255,255,.35)';
+                        r.style.transform  =  'scale(0)';
+                        r.style.transition  =  'transform .4s ease, opacity .6s ease';
+                        r.style.opacity  =  '1';
+                        r.className  =  'ripple';
+                        el.appendChild(r);
+                        requestAnimationFrame(()  =>  {
+                            r.style.transform  =  'scale(1)';
+                            r.style.opacity  =  '.0';
+                        });
+                        setTimeout(()  =>  r.remove(), 650);
+                    }, {passive:  true});
+                });
+            }
+
+            /* ========= Settings ========= */
+            function loadSettings()  {
+                const start = Number(localStorage.getItem(LS.startTs)) || 0;
+                const spent = Number(localStorage.getItem(LS.spent)) || 0;
+                const bonus = Number(localStorage.getItem(LS.bonus)) || 0;
+                const test = localStorage.getItem(LS.test)  ===  '1';
+                let history = [];
+                try  {
+
+                    history = JSON.parse(localStorage.getItem(LS.history)  ||  '[]');
+
+                }catch  { history  =  []; }
+                let craving = null;
+                try  {
+
+                    craving = JSON.parse(localStorage.getItem(LS.craving)  ||  'null');
+
+                }catch  { craving  =  null; }
+                return {start,  spent,  bonus,  test,  history,  craving};
+            }
+            function saveSettings(obj)  {
+                if  ('start' in obj) localStorage.setItem(LS.startTs,  String(obj.start  ||  0));
+                if  ('spent' in obj) localStorage.setItem(LS.spent,  String(obj.spent  ||  0));
+                if  ('bonus' in obj) localStorage.setItem(LS.bonus,  String(obj.bonus  ||  0));
+                if  ('test' in obj) localStorage.setItem(LS.test,  obj.test  ?  '1'  :  '0');
+                if  ('history' in obj) localStorage.setItem(LS.history, JSON.stringify(obj.history  ||  []));
+                if  ('craving' in obj) localStorage.setItem(LS.craving, JSON.stringify(obj.craving));
+            }
+            function ensureStart()  {
+                const st = loadSettings().start;
+                if  (!st)  { saveSettings({start: nowMs()}); }
+            }
+
+            /* ====== Time helpers (UTC store, local display) ====== */
+            function toLocalInputValue(ms)  {
+                const d = new Date(ms);
+                const y = d.getFullYear();
+                const m = String(d.getMonth()  +  1).padStart(2,  '0');
+                const day = String(d.getDate()).padStart(2,  '0');
+                const hh = String(d.getHours()).padStart(2,  '0');
+                const mm = String(d.getMinutes()).padStart(2,  '0');
+                return `${y}-${m}-${day}T${hh}:${mm}`;
+            }
+            function fromLocalInputValue(str)  {
+                if  (!str) return nowMs();
+                const [date, time] = str.split('T');
+                const [yy,  mm,  dd] = date.split('-').map(Number);
+                const [HH,  MM] = time.split(':').map(Number);
+                const d = new Date(yy, mm  -  1, dd, HH, MM, 0, 0);
+                return d.getTime();
+            }
+
+            /* ====== Core calc: 3 subs / day ====== */
+            function computeState()  {
+                const {start,  spent,  bonus,  test} = loadSettings();
+                const effectiveNow = test ? nowMs() + 24  *  3600_000 : nowMs();
+
+                const startTs = start;
+                const elapsedMs = Math.max(0, effectiveNow - startTs);
+
+                const ratePerMs = 3 / 86_400_000;
+                const accruedFloat = elapsedMs * ratePerMs;
+                const accrued = Math.floor(accruedFloat);
+
+                const available = Math.max(0, accrued + bonus - spent);
+
+                const nextUnitAt = (Math.floor(accruedFloat)  +  1) / ratePerMs;
+                const msToNext = Math.max(0, startTs + nextUnitAt - effectiveNow);
+                const unitMs = 1 / ratePerMs;
+
+                return {
+
+                    startTs,
+
+                    elapsedMs,
+
+                    accruedFloat,
+
+                    accrued,
+
+                    spent,
+
+                    bonus,
+
+                    available,
+
+                    msToNext,
+
+                    unitMs,
+
+                    test,
+
+                    effectiveNow
+
+                };
+            }
+
+            /* ====== UI helpers ====== */
+            function formatSince(ms)  {
+                const d = new Date(ms);
+                return 'с ' + d.toLocaleString([], {
+
+                    year:  'numeric',
+
+                    month:  '2-digit',
+
+                    day:  '2-digit',
+
+                    hour:  '2-digit',
+
+                    minute:  '2-digit'
+
+                });
+            }
+            function fmtETA(ms)  {
+                const s = Math.max(0, Math.floor(ms  /  1000));
+                const hh = Math.floor(s  /  3600);
+                const mm = Math.floor((s  %  3600)  /  60);
+                const ss = s  %  60;
+                const parts  =  [];
+                if  (hh) parts.push(hh  +  'ч');
+                if  (mm) parts.push(mm  +  'м');
+                parts.push(ss  +  'с');
+                return parts.join(' ');
+            }
+            function toast(msg  =  'Сохранено',  t  =  1400)  {
+                const el  =  $('#toast');
+
+                el.textContent  =  msg;
+
+                el.classList.add('toast--show');
+                setTimeout(()  =>  el.classList.remove('toast--show'), t);
+            }
+
+            /* ====== Quotes ====== */
+            const QUOTES = [
+                ["Дисциплина — это свобода.", "Джоко Уиллинк"],
+                ["Что меня не убивает, делает меня сильнее.", "Фридрих Ницше"],
+                ["Если ты проходишь через ад — продолжай идти.", "Уинстон Черчилль"],
+                ["Успех — это способность идти от поражения к поражению, не теряя энтузиазма.", "Уинстон Черчилль"],
+                ["Не проси, чтобы было легче. Проси, чтобы ты стал сильнее.", "Джим Рон"],
+                ["Гений — это 1% вдохновения и 99% пота.", "Томас Эдисон"],
+                ["Неважно, как медленно ты идёшь, пока не останавливаешься.", "Конфуций"],
+                ["Ни один ветер не будет попутным тому, кто не знает, куда плыть.", "Сенека"],
+                ["Делай, что можешь, там, где ты есть, с тем, что имеешь.", "Теодор Рузвельт"],
+                ["Я терпел поражение снова и снова. И потому я побеждаю.", "Майкл Джордан"],
+                ["Ты промахиваешься в 100% бросков, которые не делаешь.", "Уэйн Гретцки"],
+                ["Если думаешь, что сможешь — ты прав; если думаешь, что не сможешь — тоже прав.", "Генри Форд"],
+                ["Тяжело в учении — легко в бою.", "Александр Суворов"],
+                ["Кто познал «зачем», выдержит почти любое «как».", "Фридрих Ницше"],
+                ["Человека можно лишить всего, кроме одного — свободы выбирать своё отношение к обстоятельствам.", "Виктор Франкл"],
+                ["Путь преграды становится путём: то, что мешает действию, продвигает действие.", "Марк Аврелий"],
+                ["Если хочешь иметь то, чего никогда не имел, делай то, чего никогда не делал.", "Томас Джефферсон"],
+                ["Лучшее время посадить дерево было 20 лет назад. Второе лучшее — сегодня.", "Китайская пословица"],
+                ["Талант — ничто без упорства.", "Дин Кроуфорд"],
+                ["Персеверанс — это работа, которую делаешь после того, как устал от работы, которую уже сделал.", "Ньют Гингрич"],
+                ["Не события тревожат людей, а их мнение о событиях.", "Эпиктет"],
+                ["Сила приходит не от побед. Борьба развивает твою силу.", "Арнольд Шварценеггер"],
+                ["Кровь, труд, слёзы и пот.", "Уинстон Черчилль"],
+                ["Не жди вдохновения — иди за ним с дубиной.", "Джек Лондон"],
+                ["Падает семь раз — поднимайся восемь.", "Японская пословица"],
+                ["Все хотят в рай, но никто не хочет умирать.", "Джо Луис"],
+                ["У каждого есть план, пока он не получил по морде.", "Майк Тайсон"],
+                ["Жёсткость ума — это образ жизни.", "Дэвид Гоггинс"],
+                ["Я не останавливаюсь, когда устал. Я останавливаюсь, когда закончил.", "Дэвид Гоггинс"],
+                ["Никому нет дела до того, что ты сделал вчера. Что ты сделал сегодня, чтобы стать лучше?", "Дэвид Гоггинс"],
+                ["Мы становимся тем, что делаем постоянно. Следовательно, совершенство — не поступок, а привычка.", "Аристотель"],
+                ["Сначала мы формируем привычки, затем привычки формируют нас.", "Джон Драйден"],
+                ["Вы не поднимаетесь до уровня своих целей — вы падаете до уровня своих систем.", "Джеймс Клир"],
+                ["Если что-то достаточно важно, делай это, даже если шансы против тебя.", "Илон Маск"],
+                ["Не позволяй тому, что ты не можешь, мешать тому, что ты можешь.", "Джон Вуден"],
+                ["Мужество — это не отсутствие страха, а победа над ним.", "Нельсон Мандела"],
+                ["Там, где нет борьбы, нет силы.", "Опра Уинфри"],
+                ["Действуй. Даже маленькое действие лучше бездействия.", "Лао-цзы"],
+                ["Дисциплина — мост между целями и достижениями.", "Джим Рон"],
+                ["Не сравнивай себя с другими. Сравнивай себя с тем, кем ты был вчера.", "Джордан Питерсон"],
+                ["Настоящий мужик — тот, кто победил самого себя.", "Миямото Мусаси"],
+                ["Не делай ничего бесполезного.", "Миямото Мусаси"],
+                ["Сначала они тебя игнорируют, потом смеются, потом борются с тобой — а затем ты побеждаешь.", "Махатма Ганди"],
+                ["Самая большая ошибка — бояться совершить ошибку.", "Эльберт Хаббард"],
+                ["Хочешь изменить мир — начни с себя.", "Махатма Ганди"],
+                ["Храбрость — это давление продолжать, когда нет сил.", "Наполеон Бонапарт"],
+                ["Если не можешь — значит, надо; если надо — значит, сможешь.", "Неизвестный"],
+                ["Пока ты жив, у тебя больше причин действовать, чем оправдываться.", "Джоко Уиллинк"],
+                ["Успех — это сумма маленьких усилий, повторяющихся изо дня в день.", "Роберт Колльер"],
+                ["Сильный — тот, кто владеет собой.", "Лев Толстой"],
+                ["Счастье благоволит смелым.", "Вергилий"]
+            ];
+            function pickQuote()  {
+                const i = Math.floor((Date.now()  /  3600000) % QUOTES.length);
+                const [t,  a] = QUOTES[i];
+                const qt = $('#quoteText'), qa = $('#quoteAuthor');
+                qt.style.opacity = qa.style.opacity = '0';
+                setTimeout(()  =>  {
+                    qt.textContent = '«' + t + '»';
+                    qa.textContent = '— ' + a;
+                    qt.style.opacity = qa.style.opacity = '1';
+                },  120);
+            }
+
+            /* ====== Render ====== */
+            let lastTimerStr = '';
+            let lastBalance = 0;
+            let lastPct = -1;
+
+            function render()  {
+                const s = computeState();
+
+                // Timer N дн • HH:MM:SS
+                const t = Math.max(0, s.effectiveNow - s.startTs);
+                const days = Math.floor(t  /  86_400_000);
+                const hours = Math.floor((t  %  86_400_000)  /  3_600_000);
+                const mins = Math.floor((t  %  3_600_000)  /  60_000);
+                const secs = Math.floor((t  %  60_000)  /  1000);
+                const hh = String(hours).padStart(2,  '0');
+                const mm = String(mins).padStart(2,  '0');
+                const ss = String(secs).padStart(2,  '0');
+                const cur = `${days} дн • ${hh}:${mm}:${ss}`;
+                if  (cur  !==  lastTimerStr)  {
+                    $('#timer').textContent = cur;
+                    pulse($('#timer'));
+                    lastTimerStr = cur;
+                }
+
+                $('#sinceLabel').textContent = formatSince(s.startTs);
+                $('#rateBadge').textContent = '3 подписки / сутки';
+                $('#testBadge').style.display = s.test ? '' : 'none';
+
+                // Balance
+                $('#spendBtn').disabled = s.available  <=  0;
+                $('#balanceVal').textContent = s.available;
+                if (s.available !== lastBalance)  {
+
+                    pulse($('#balanceVal'));
+
+                    lastBalance = s.available;
+
+                }
+
+                // Progress to next sub — всегда время
+                const p = clamp(1 - (s.msToNext / s.unitMs), 0, 1);
+                $('#progressBar').style.width = (p  *  100).toFixed(1)  +  '%';
+                $('#eta').textContent = fmtETA(s.msToNext);
+
+                // Artifact (goal 90d)
+                const goalMs = DEFAULTS.GOAL_DAYS * 86_400_000;
+                const pct = clamp((s.elapsedMs  /  goalMs)  *  100,  0,  100);
+                if (Math.abs(pct - lastPct) > 0.01)  {
+                    const orb = $('#orb');
+                    orb.style.setProperty('--pct', pct.toFixed(2) + '%');
+                    $('#orbPct').textContent = pct.toFixed(2) + '%';
+                    lastPct = pct;
+                }
+
+                // Craving pill + caption
+                const {craving} = loadSettings();
+                const active = (craving && craving.active);
+                $('#cravingPill').style.display = active ? '' : 'none';
+                $('#cravingBtn').innerHTML = active
+                    ? '<i class="fa-solid fa-bolt icon" style="margin-right:8px;vertical-align:middle"></i> Шторм активен'
+                    : '<i class="fa-solid fa-bolt icon" style="margin-right:8px;vertical-align:middle"></i> Шторм';
+            }
+
+            function pulse(el)  {
+
+                if  (!el) return  ;
+
+                el.classList.remove('pulse');
+
+                void el.offsetWidth;
+
+                el.classList.add('pulse');
+
+            }
+
+            /* ====== Spend flow + History ====== */
+            let qty = 1;
+            function openSpend()  {
+                const {available} = computeState();
+                if  (available  <=  0) return  ;
+                qty = 1;
+                $('#qtyVal').textContent = qty;
+                openSheet(sheets.spend);
+            }
+            function qtyMinus()  {
+
+                const {available}  =  computeState();
+
+                qty = clamp(qty  -  1,  1,  Math.max(1,  available));
+
+                $('#qtyVal').textContent  =  qty;
+
+                pulse($('#qtyVal'));
+
+            }
+            function qtyPlus()  {
+
+                const {available}  =  computeState();
+
+                qty = clamp(qty  +  1,  1,  Math.max(1,  available));
+
+                $('#qtyVal').textContent  =  qty;
+
+                pulse($('#qtyVal'));
+
+            }
+
+            function goConfirm()  {
+                const {available}  =  computeState();
+                if  (qty  <  1)  { toast('Минимум 1'); return  ; }
+                if  (qty  >  available)  {
+
+                    toast('Недостаточно подписок'); return  ;
+
+                }
+                closeSheet(sheets.spend);
+                $('#confirmQty').textContent = String(qty);
+                setTimeout(()  =>  openSheet(sheets.confirm),  120);
+            }
+            function doSpend()  {
+                const st = loadSettings();
+                const cur = computeState();
+                if  (qty  <  1 || qty  >  cur.available)  {
+
+                    toast('Недостаточно подписок');
+
+                    closeSheet(sheets.confirm); return  ;
+
+                }
+                const newSpent = st.spent + qty;
+                const newHistory = [{t:  nowMs(), type:  'spend', qty}, ...st.history].slice(0,  500);
+                saveSettings({spent:  newSpent, history:  newHistory});
+                closeSheet(sheets.confirm);
+
+                // Done sheet (списание)
+                $('#doneDt').textContent = new Date().toLocaleString();
+                $('#doneQty').textContent = String(qty);
+                const chip = $('#doneChip');
+
+                chip.innerHTML = '<i class="fa-solid fa-check"></i> Готово';
+                openSheet(sheets.done);
+                vibr();
+                render();
+            }
+            function buildHistoryItem(it)  {
+                const d = new Date(it.t).toLocaleString();
+                const tag = it.type  ===  'bonus' ? '<span class="tag tag--bonus">бонус</span>' : '<span class="tag tag--spend">списание</span>';
+                const sign = it.type  ===  'bonus' ? '+' : '−';
+                return `<div class="history__item">
+                    <div>
+                        <div class="mono">${
+
+            d
+
+            }</div>
+                        <div class="muted" style="font-size:12px">${
+
+            it.note  ?  it.note  :  ''
+
+            }</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                        ${
+
+            tag
+
+            }
+                        <div class="mono" style="font-weight:800">${
+
+            sign
+
+            }${
+
+            it.qty
+
+            }</div>
+                    </div>
+                </div>`;
+            }
+            function openHistory()  {
+                const {history}  =  loadSettings();
+                const list = $('#historyList');
+                list.innerHTML = history.length ? history.map(buildHistoryItem).join('') : '<div class="muted" style="text-align:center">Пока пусто</div>';
+                openSheet(sheets.history);
+            }
+
+            /* ====== Craving (Шторм) ====== */
+            const BONUS_BY_LEVEL = { m:  1, s:  2, x:  4 };
+            let selLevel = 'm';
+
+            function setLevelUI(level)  {
+                selLevel = level;
+                document.querySelectorAll('#sheetCraving [data-level]').forEach(b  =>  {
+                    b.classList.toggle('selected', b.getAttribute('data-level')  ===  selLevel);
+                });
+                $('#crvBonusPreview').textContent = '+' + BONUS_BY_LEVEL[selLevel];
+
+                const st = loadSettings();
+                if  (st.craving && st.craving.active)  {
+                    saveSettings({
+
+                        craving:  {
+
+                            active:  1,
+
+                            started: st.craving.started,
+
+                            level: selLevel
+
+                        }
+
+                    });
+                }
+            }
+            function openCraving()  {
+                const st = loadSettings();
+                if  (!st.craving) saveSettings({
+
+                    craving:  {active:  0, started:  0, level:  'm'}
+
+                });
+                const cv = loadSettings().craving;
+
+                setLevelUI(cv.level  ||  'm');
+
+                if  (cv.active)  {
+                    $('#crvStatusLine').textContent = 'шторм активен';
+                    $('#crvTimes').style.display = '';
+                    $('#crvStartDt').textContent = new Date(cv.started).toLocaleString();
+                    $('#crvActionsIdle').style.display = 'none';
+                    $('#crvActionsActive').style.display = '';
+                }  else  {
+                    $('#crvStatusLine').textContent = 'нет активного шторма';
+                    $('#crvTimes').style.display = 'none';
+                    $('#crvActionsIdle').style.display = '';
+                    $('#crvActionsActive').style.display = 'none';
+                }
+                openSheet(sheets.craving);
+            }
+            function updateCravingElapsed()  {
+                const cv = loadSettings().craving;
+                if  (!cv || !cv.active)  {
+
+                    $('#crvElapsed').textContent  =  '—'; return  ;
+
+                }
+                const el = Math.max(0, nowMs() - cv.started);
+                const h = Math.floor(el  /  3_600_000);
+                const m = Math.floor((el  %  3_600_000)  /  60_000);
+                $('#crvElapsed').textContent = `${h}ч ${m}м`;
+            }
+            function cravingStart()  {
+                const cv = {
+
+                    active:  1,
+
+                    started: nowMs(),
+
+                    level: selLevel
+
+                };
+                saveSettings({craving:  cv});
+                toast('Шторм зарегистрирован');
+                closeSheet(sheets.craving);
+                render();
+            }
+            function cravingCancel()  {
+                saveSettings({
+
+                    craving:  {active:  0, started:  0, level:  'm'}
+
+                });
+                toast('Шторм сброшен');
+                closeSheet(sheets.craving);
+                render();
+            }
+            function cravingFinishOpenConfirm()  {
+                const cv = loadSettings().craving || {active:  0, started:  0, level: selLevel};
+                const level = cv.level || selLevel;
+                const bonus = BONUS_BY_LEVEL[level] || 0;
+                $('#crvConfirmLevel').textContent = levelNote(level);
+                $('#crvConfirmBonus').textContent = `+${bonus}`;
+                closeSheet(sheets.craving);
+                setTimeout(()  =>  openSheet(sheets.cravingConfirm),  120);
+            }
+            function cravingFinishDo()  {
+                const st = loadSettings();
+                const level = (st.craving && st.craving.level) ? st.craving.level : selLevel;
+                const bonus = BONUS_BY_LEVEL[level] || 0;
+
+                const newBonus = st.bonus + bonus;
+                const hist = [{
+
+                    t:  nowMs(),
+
+                    type:  'bonus',
+
+                    qty:  bonus,
+
+                    note:  levelNote(level)
+
+                }, ...st.history].slice(0,  500);
+                saveSettings({
+
+                    bonus:  newBonus,
+
+                    history:  hist,
+
+                    craving:  {active:  0, started:  0, level:  'm'}
+
+                });
+                closeSheet(sheets.cravingConfirm);
+
+                // Done as bonus
+                $('#doneDt').textContent = new Date().toLocaleString();
+                $('#doneQty').textContent = `+${bonus}`;
+                $('#doneChip').innerHTML = '<i class="fa-solid fa-star"></i> Бонус';
+                openSheet(sheets.done);
+                vibr();
+                confettiBurst(); // 🎉 лёгкий бёрст
+                render();
+                setTimeout(()  =>  {
+
+                    $('#doneChip').innerHTML = '<i class="fa-solid fa-check"></i> Готово';
+
+                }, 1600);
+            }
+            function levelNote(l)  {
+
+                return l  ===  'm'  ?  'средняя'  : l  ===  's'  ?  'сильная'  :  'экстра';
+
+            }
+
+            /* ====== Overlays map ====== */
+            const sheets = {
+                settings:  $('#sheetSettings'),
+                spend:  $('#sheetSpend'),
+                confirm:  $('#sheetConfirm'),
+                done:  $('#sheetDone'),
+                history:  $('#sheetHistory'),
+                craving:  $('#sheetCraving'),
+                cravingConfirm:  $('#sheetCravingConfirm')
+            };
+            Object.values(sheets).forEach(ov  =>  {
+                ov.addEventListener('click',  e  =>  { if  (e.target  ===  ov) closeSheet(ov); });
+            });
+
+            /* ====== Settings events ====== */
+            function openSettingsSheet()  {
+                const {start,  test} = loadSettings();
+                $('#startAt').value = toLocalInputValue(start || nowMs());
+                $('#testMode').checked = !!test;
+                openSheet(sheets.settings);
+            }
+            function saveSettingsSheet()  {
+                const localStr = $('#startAt').value;
+                const start = fromLocalInputValue(localStr);
+                const test = $('#testMode').checked;
+                saveSettings({start,  test});
+                closeSheet(sheets.settings);
+                toast('Сохранено');
+                render();
+            }
+            function softReset()  {
+                saveSettings({
+                    start: nowMs(),
+                    spent: 0,
+                    bonus: 0,
+                    history: [],
+                    craving: {active:  0, started:  0, level:  'm'}
+                });
+                toast('Сброшено на текущий момент');
+                render();
+            }
+
+            /* ====== Confetti (лёгкая реализация) ====== */
+            function confettiBurst()  {
+                const cvs = $('#confetti');
+                const ctx = cvs.getContext('2d');
+                const DPR = Math.max(1, window.devicePixelRatio  ||  1);
+                const W = cvs.width = Math.floor(innerWidth  *  DPR);
+                const H = cvs.height = Math.floor(innerHeight  *  DPR);
+                cvs.style.display = 'block';
+
+                const colors = ['#8fb0ff',  '#38d68a',  '#ffd06a',  '#ff7a86',  '#4c7df0'];
+                const N = 60;
+                const parts = Array.from({length:  N}, ()  =>  ({
+                    x: Math.random()  *  W,
+
+                    y: -20  *  DPR,
+                    vx: (Math.random()  -  .5)  *  0.8  *  DPR,
+                    vy: (Math.random()  *  2  +  2)  *  DPR,
+                    s: (Math.random()  *  6  +  4)  *  DPR,
+                    c: colors[Math.floor(Math.random()  *  colors.length)],
+                    a: 1,
+                    rot: Math.random()  *  Math.PI  *  2,
+
+                    vr: (Math.random()  -  .5)  *  0.2
+                }));
+
+                let t0  =  null;
+                function step(ts)  {
+                    if  (!t0) t0  =  ts;
+                    const dt = Math.min(32, ts  -  t0);
+
+                    t0  =  ts;
+                    ctx.clearRect(0,  0,  W,  H);
+                    let alive  =  false;
+                    for  (const p of parts)  {
+                        p.vy += 0.03  *  DPR;
+                        p.x += p.vx  *  dt  *  0.06;
+                        p.y += p.vy  *  dt  *  0.06;
+                        p.rot += p.vr;
+                        p.a -= 0.004  *  dt;
+                        if  (p.a  >  0 && p.y  <  H  +  40  *  DPR)  { alive  =  true; }
+                        ctx.save();
+                        ctx.globalAlpha = Math.max(0,  p.a);
+                        ctx.translate(p.x,  p.y);
+                        ctx.rotate(p.rot);
+                        ctx.fillStyle = p.c;
+                        ctx.fillRect(-p.s  /  2, -p.s  /  2, p.s, p.s  *  0.6);
+                        ctx.restore();
+                    }
+                    if  (alive)  {
+                        requestAnimationFrame(step);
+                    }  else  {
+                        cvs.style.display  =  'none';
+                    }
+                }
+                requestAnimationFrame(step);
+            }
+
+            /* ====== Tick ====== */
+            function tick()  {
+                render();
+                updateCravingElapsed();
+                requestAnimationFrame(()  =>  setTimeout(tick,  250));
+            }
+
+            /* ====== Events bind ====== */
+            $('#openSettings').addEventListener('click', openSettingsSheet);
+            $('#closeSettings').addEventListener('click', ()  =>  closeSheet(sheets.settings));
+            $('#saveSettings').addEventListener('click', saveSettingsSheet);
+            $('#softReset').addEventListener('click', softReset);
+
+            $('#openHistory').addEventListener('click', openHistory);
+            $('#closeHistory').addEventListener('click', ()  =>  closeSheet(sheets.history));
+
+            $('#spendBtn').addEventListener('click', openSpend);
+            $('#cancelSpend').addEventListener('click', ()  =>  closeSheet(sheets.spend));
+            $('#qtyMinus').addEventListener('click', qtyMinus);
+            $('#qtyPlus').addEventListener('click', qtyPlus);
+            $('#goConfirm').addEventListener('click', goConfirm);
+            $('#backFromConfirm').addEventListener('click', ()  =>  closeSheet(sheets.confirm));
+            $('#confirmYes').addEventListener('click', doSpend);
+            $('#closeDone').addEventListener('click', ()  =>  closeSheet(sheets.done));
+
+            $('#cravingBtn').addEventListener('click', openCraving);
+            document.querySelectorAll('#sheetCraving [data-level]').forEach(b  =>  {
+                b.addEventListener('click', ()  =>  {
+
+                    setLevelUI(b.getAttribute('data-level'));
+
+                });
+            });
+            $('#cravingStart').addEventListener('click', cravingStart);
+            $('#cravingCancel').addEventListener('click', cravingCancel);
+            $('#cravingFinish').addEventListener('click', cravingFinishOpenConfirm);
+            $('#closeCraving').addEventListener('click', ()  =>  closeSheet(sheets.craving));
+
+            $('#crvConfirmBack').addEventListener('click', ()  =>  {
+
+                closeSheet(sheets.cravingConfirm);
+
+                setTimeout(()  =>  openCraving(),  120);
+
+            });
+            $('#crvConfirmYes').addEventListener('click', cravingFinishDo);
+
+            /* ====== Init ====== */
+            ensureStart();
+            pickQuote();
+            render();
+            tick();
+            attachRipple();
+
+            /* ====== Twitch icon fallback ====== */
+            window.addEventListener('load', ()  =>  {
+                const testBrand = document.createElement('i');
+                testBrand.className = 'fa-brands fa-twitch';
+                document.body.appendChild(testBrand);
+                const hasWidth = getComputedStyle(testBrand).width !== '0px';
+                testBrand.remove();
+                if  (!hasWidth)  {
+                    const tw = document.querySelector('#spendBtn i.fa-brands.fa-twitch');
+                    if  (tw)  { tw.outerHTML = '🎟️'; }
+                }
+            });
+        </script>
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js');
+                });
+            }
+        </script>
+    </body>
+</html>
