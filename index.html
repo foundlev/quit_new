@@ -688,6 +688,18 @@
                     transition: none !important
                 }
             }
+
+            .fa.ton {
+                display:inline-block;
+                width: 1.5em;
+                height: 1.5em;
+                background-color: currentColor;
+                mask: url("assets/fontawesome/svgs/brands/ton.svg") no-repeat center;
+                -webkit-mask: url("assets/fontawesome/svgs/brands/ton.svg") no-repeat center;
+                mask-size: 95% 95%;
+                -webkit-mask-size: 95% 95%;
+                vertical-align: -0.125em;
+            }
         </style>
     </head>
     <body>
@@ -711,7 +723,7 @@
                     <div class="timer__value" id="timer">00 дн • 00:00:00</div>
                     <div class="timer__since muted" id="sinceLabel">с …</div>
                     <div class="badges">
-                        <span class="badge" id="rateBadge">3 подписки / сутки</span>
+                        <span class="badge" id="rateBadge">3 TON / сутки</span>
                         <span class="badge" id="testBadge" style=" display:none;">Тест: +24ч</span>
                         <span class="pill" id="cravingPill" style=" display:none;"><i class="fa-solid fa-bolt"></i> шторм активен</span>
                     </div>
@@ -728,14 +740,14 @@
 
                 <section class="balance">
                     <div class="balance__row">
-                        <span>Баланс подписок</span>
+                        <span>Баланс TON</span>
                         <span class="balance__value mono" id="balanceVal">0</span>
                     </div>
-                    <div class="progress" aria-label="Прогресс до следующей подписки">
+                    <div class="progress" aria-label="Прогресс до следующего TON">
                         <i id="progressBar" style=" width:0%"></i>
                     </div>
                     <div class="balance__row muted">
-                        <span>Следующая подписка через</span>
+                        <span>Следующий TON через</span>
                         <span class="mono" id="eta">—</span>
                     </div>
                 </section>
@@ -744,8 +756,8 @@
 
                 <section class="actions">
                     <button class="btn" id="spendBtn">
-                        <i class="fa-brands fa-twitch icon" style=" margin-right:8px;vertical-align:middle" aria-hidden="true"></i>
-                        Списать подписки
+                        <i class="fa ton icon" style="margin-bottom:8px;vertical-align:middle" aria-hidden="true"></i>
+                        Списать TON
                     </button>
                     <button class="btn btn--warning" id="cravingBtn">
                         <i class="fa-solid fa-bolt icon" style=" margin-right:8px;vertical-align:middle"></i>
@@ -789,10 +801,10 @@
         <!-- Ввод списания -->
         <div class="overlay" id="sheetSpend" role="dialog" aria-modal="true" aria-labelledby="spendTitle">
             <div class="sheet" role="document">
-                <h3 id="spendTitle">Списать подписки</h3>
+                <h3 id="spendTitle">Списать TON</h3>
                 <div class="field">
                     <label>Количество</label>
-                    <div class="qty" role="group" aria-label="Количество подписок">
+                    <div class="qty" role="group" aria-label="Количество TON">
                         <button class="qty__btn" id="qtyMinus" aria-label="Минус"><i class="fa-solid fa-minus"></i></button>
                         <div class="qty__val mono" id="qtyVal">1</div>
                         <button class="qty__btn" id="qtyPlus" aria-label="Плюс"><i class="fa-solid fa-plus"></i></button>
@@ -810,7 +822,7 @@
         <div class="overlay" id="sheetConfirm" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
             <div class="sheet" role="document">
                 <h3 id="confirmTitle">Подтвердить списание?</h3>
-                <p>Вы уверены, что хотите списать <strong class="mono" id="confirmQty">0</strong> подписок?</p>
+                <p>Вы уверены, что хотите списать <strong class="mono" id="confirmQty">0</strong> TON?</p>
                 <div class="row">
                     <button class="btn btn--ghost" id="backFromConfirm">Назад</button>
                     <button class="btn btn--ok" id="confirmYes">Подтвердить</button>
@@ -1191,7 +1203,7 @@
                 }
 
                 $('#sinceLabel').textContent = formatSince(s.startTs);
-                $('#rateBadge').textContent = '3 подписки / сутки';
+                $('#rateBadge').textContent = '3 TON / сутки';
                 $('#testBadge').style.display = s.test ? '' : 'none';
 
                 // Balance
@@ -1278,7 +1290,7 @@
                 if  (qty  <  1)  { toast('Минимум 1'); return  ; }
                 if  (qty  >  available)  {
 
-                    toast('Недостаточно подписок'); return  ;
+                    toast('Недостаточно TON'); return  ;
 
                 }
                 closeSheet(sheets.spend);
@@ -1290,7 +1302,7 @@
                 const cur = computeState();
                 if  (qty  <  1 || qty  >  cur.available)  {
 
-                    toast('Недостаточно подписок');
+                    toast('Недостаточно TON');
 
                     closeSheet(sheets.confirm); return  ;
 
@@ -1651,19 +1663,6 @@
             render();
             tick();
             attachRipple();
-
-            /* ====== Twitch icon fallback ====== */
-            window.addEventListener('load', ()  =>  {
-                const testBrand = document.createElement('i');
-                testBrand.className = 'fa-brands fa-twitch';
-                document.body.appendChild(testBrand);
-                const hasWidth = getComputedStyle(testBrand).width !== '0px';
-                testBrand.remove();
-                if  (!hasWidth)  {
-                    const tw = document.querySelector('#spendBtn i.fa-brands.fa-twitch');
-                    if  (tw)  { tw.outerHTML = '🎟️'; }
-                }
-            });
         </script>
         <script>
             if ('serviceWorker' in navigator) {
