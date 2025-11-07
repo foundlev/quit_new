@@ -333,7 +333,11 @@
                 border-radius: 12px;
                 padding: 12px;
                 font-size: 15px;
-                transition: border-color .15s ease, box-shadow .15s ease
+                transition: border-color .15s ease, box-shadow .15s ease;
+                -webkit-appearance: none;
+                text-align: center;
+                box-sizing: border-box;
+                margin: 0;
             }
             input[type="datetime-local"]:focus {
                 outline: none;
@@ -759,10 +763,17 @@
                         <i class="fa ton icon" style="margin-bottom:8px;vertical-align:middle" aria-hidden="true"></i>
                         Списать TON
                     </button>
-                    <button class="btn btn--warning" id="cravingBtn">
-                        <i class="fa-solid fa-bolt icon" style=" margin-right:8px;vertical-align:middle"></i>
-                        Шторм
-                    </button>
+
+                    <div class="row">
+                        <button class="btn btn--warning" id="cravingBtn">
+                            <i class="fa-solid fa-bolt icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Шторм
+                        </button>
+                        <button class="btn btn--ok" id="workoutBtn">
+                            <i class="fa-solid fa-dumbbell icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Спорт
+                        </button>
+                    </div>
                 </section>
 
                 <div class="divider"></div>
@@ -781,16 +792,16 @@
             <div class="sheet" role="document">
                 <h3 id="settingsTitle">Настройки</h3>
                 <div class="field">
-                    <label for="startAt">Дата и время начала отсчёта</label>
+                    <label for="startAt">Дата и время начала отсчёта (местное)</label>
                     <input type="datetime-local" id="startAt">
-                    <small class="muted">Хранится в UTC, ввод/отображение — по местному времени.</small>
+                    <small class="muted">После изменения нажмите Сохранить</small>
                 </div>
                 <label class="check" style=" display:none">
                     <input type="checkbox" id="testMode">
                     <span>Режим тестирования (к текущему времени +24ч)</span>
                 </label>
                 <div class="divider"></div>
-                <button class="btn btn--ghost" id="softReset">Сбросить данные (начать с сейчас)</button>
+                <button class="btn btn--ghost" id="softReset">Сбросить данные</button>
                 <div class="row">
                     <button class="btn btn--ghost" id="closeSettings">Отмена</button>
                     <button class="btn" id="saveSettings">Сохранить</button>
@@ -908,6 +919,18 @@
                 <div class="confirm__row">
                     <button class="btn btn--ghost" id="crvConfirmBack">Назад</button>
                     <button class="btn btn--ok" id="crvConfirmYes">Подтвердить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Подтверждение тренировки -->
+        <div class="overlay" id="sheetWorkoutConfirm" role="dialog" aria-modal="true" aria-labelledby="wkConfirmTitle">
+            <div class="sheet" role="document">
+                <h3 id="wkConfirmTitle">Добавить тренировку?</h3>
+                <p class="confirm__txt">За тренировку будет начислено <strong class="mono">+2</strong> TON и запись появится в истории.</p>
+                <div class="confirm__row">
+                    <button class="btn btn--ghost" id="wkConfirmBack">Отмена</button>
+                    <button class="btn btn--ok" id="wkConfirmYes">Подтвердить</button>
                 </div>
             </div>
         </div>
@@ -1236,9 +1259,7 @@
                 const {craving} = loadSettings();
                 const active = (craving && craving.active);
                 $('#cravingPill').style.display = active ? '' : 'none';
-                $('#cravingBtn').innerHTML = active
-                    ? '<i class="fa-solid fa-bolt icon" style="margin-right:8px;vertical-align:middle"></i> Шторм активен'
-                    : '<i class="fa-solid fa-bolt icon" style="margin-right:8px;vertical-align:middle"></i> Шторм';
+                $('#cravingBtn').innerHTML = '<i class="fa-solid fa-bolt icon" style="margin-right:8px;vertical-align:middle"></i> Шторм';
             }
 
             function pulse(el)  {
@@ -1511,6 +1532,39 @@
 
             }
 
+            /* ====== Workout (Тренировка) ====== */
+            function openWorkoutConfirm() {
+                openSheet(sheets.workoutConfirm);
+            }
+
+            function workoutConfirmDo() {
+                const st = loadSettings();
+                const bonusAdd = 2;
+
+                const newBonus = st.bonus + bonusAdd;
+                const hist = [{
+                    t: nowMs(),
+                    type: 'bonus',
+                    qty: bonusAdd,
+                    note: 'тренировка'
+                }, ...(st.history || [])].slice(0, 500);
+
+                saveSettings({ bonus: newBonus, history: hist });
+
+                closeSheet(sheets.workoutConfirm);
+
+                // Итоговый лист как "бонус"
+                $('#doneDt').textContent = new Date().toLocaleString();
+                $('#doneQty').textContent = `+${bonusAdd}`;
+                $('#doneChip').innerHTML = '<i class="fa-solid fa-star"></i> Бонус';
+                openSheet(sheets.done);
+                vibr();
+                confettiBurst();
+                render();
+
+                setTimeout(() => { $('#doneChip').innerHTML = '<i class="fa-solid fa-check"></i> Готово'; }, 1600);
+            }
+
             /* ====== Overlays map ====== */
             const sheets = {
                 settings:  $('#sheetSettings'),
@@ -1519,7 +1573,8 @@
                 done:  $('#sheetDone'),
                 history:  $('#sheetHistory'),
                 craving:  $('#sheetCraving'),
-                cravingConfirm:  $('#sheetCravingConfirm')
+                cravingConfirm:  $('#sheetCravingConfirm'),
+                workoutConfirm:  $('#sheetWorkoutConfirm')
             };
             Object.values(sheets).forEach(ov  =>  {
                 ov.addEventListener('click',  e  =>  { if  (e.target  ===  ov) closeSheet(ov); });
@@ -1622,6 +1677,10 @@
             $('#closeSettings').addEventListener('click', ()  =>  closeSheet(sheets.settings));
             $('#saveSettings').addEventListener('click', saveSettingsSheet);
             $('#softReset').addEventListener('click', softReset);
+
+            $('#workoutBtn').addEventListener('click', openWorkoutConfirm);
+            $('#wkConfirmBack').addEventListener('click', () => closeSheet(sheets.workoutConfirm));
+            $('#wkConfirmYes').addEventListener('click', workoutConfirmDo);
 
             $('#openHistory').addEventListener('click', openHistory);
             $('#closeHistory').addEventListener('click', ()  =>  closeSheet(sheets.history));
