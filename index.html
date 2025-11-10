@@ -820,7 +820,7 @@
                         <div class="qty__val mono" id="qtyVal">1</div>
                         <button class="qty__btn" id="qtyPlus" aria-label="Плюс"><i class="fa-solid fa-plus"></i></button>
                     </div>
-                    <small class="muted">От 1 до доступного баланса.</small>
+                    <small class="muted">От 10 до доступного баланса.</small>
                 </div>
                 <div class="row">
                     <button class="btn btn--ghost" id="cancelSpend">Отмена</button>
@@ -953,6 +953,7 @@
                 craving:  'clean.craving'
             };
             const DEFAULTS = { TEST_MODE:  false, GOAL_DAYS:  90 };
+            const MIN_TO_SPEND = 10;
 
             const $ = s => document.querySelector(s);
             const nowMs = () => Date.now();
@@ -1308,7 +1309,7 @@
 
             function goConfirm()  {
                 const {available}  =  computeState();
-                if  (qty  <  1)  { toast('Минимум 1'); return  ; }
+                if  (qty  <  MIN_TO_SPEND)  { toast('Минимум ' + MIN_TO_SPEND); return  ; }
                 if  (qty  >  available)  {
 
                     toast('Недостаточно TON'); return  ;
@@ -1321,7 +1322,7 @@
             function doSpend()  {
                 const st = loadSettings();
                 const cur = computeState();
-                if  (qty  <  1 || qty  >  cur.available)  {
+                if  (qty  <  MIN_TO_SPEND || qty  >  cur.available)  {
 
                     toast('Недостаточно TON');
 
