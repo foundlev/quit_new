@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <title>Сила × 90</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
         <meta name="color-scheme" content="light dark">
         <!-- Font Awesome (локальный путь, как у тебя) -->
         <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
@@ -1276,11 +1276,11 @@
             }
 
             /* ====== Spend flow + History ====== */
-            let qty = 1;
+            let qty = MIN_TO_SPEND;
             function openSpend()  {
                 const {available} = computeState();
-                if  (available  <=  0) return  ;
-                qty = 1;
+                if  (available  <  MIN_TO_SPEND) return  ;
+                qty = MIN_TO_SPEND;
                 $('#qtyVal').textContent = qty;
                 openSheet(sheets.spend);
             }
@@ -1288,7 +1288,7 @@
 
                 const {available}  =  computeState();
 
-                qty = clamp(qty  -  1,  1,  Math.max(1,  available));
+                qty = clamp(qty  -  1,  MIN_TO_SPEND,  Math.max(MIN_TO_SPEND,  available));
 
                 $('#qtyVal').textContent  =  qty;
 
@@ -1299,7 +1299,7 @@
 
                 const {available}  =  computeState();
 
-                qty = clamp(qty  +  1,  1,  Math.max(1,  available));
+                qty = clamp(qty  +  1,  MIN_TO_SPEND,  Math.max(1,  available));
 
                 $('#qtyVal').textContent  =  qty;
 
