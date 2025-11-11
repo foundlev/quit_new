@@ -722,6 +722,27 @@
                 opacity: .9;
             }
             .linklike:hover { opacity: 1; }
+
+            .confirm__rate{
+                margin: 6px 0 12px;
+                font-size: 14px;
+                color: var(--muted);
+            }
+            .spinner{
+                display: inline-block;
+                width: 14px;
+                height: 14px;
+                border: 2px solid transparent;
+                border-top: 2px solid currentColor;
+                border-radius: 50%;
+                animation: spin 0.9s linear infinite;
+                vertical-align: -2px;
+                margin-right: 6px;
+            }
+            /* если у тебя нет @keyframes spin — добавь: */
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
         </style>
     </head>
     <body>
@@ -853,7 +874,11 @@
         <div class="overlay" id="sheetConfirm" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
             <div class="sheet" role="document">
                 <h3 id="confirmTitle">Подтвердить списание?</h3>
-                <p>Вы уверены, что хотите списать <strong class="mono" id="confirmQty">0</strong> TON?</p>
+                <p style="margin-bottom: 0;">Вы уверены, что хотите списать <strong class="mono" id="confirmQty">0</strong> TON?</p>
+                <p class="confirm__rate" id="confirmRateRow">
+                    <span class="spinner" id="confirmRateSpinner"></span>
+                    <span id="confirmRateText">Получение курса…</span>
+                </p>
                 <div class="row">
                     <button class="btn btn--ghost" id="backFromConfirm">Назад</button>
                     <button class="btn btn--ok" id="confirmYes">Подтвердить</button>
@@ -1339,18 +1364,70 @@
 
             }
 
+            // Наценка (мультипликатор). Пример: 1.15 = +15%
+            const PRICE_MARKUP = 1.15;
+
+            // округление до 1 знака после запятой
+            const round1 = (n) => Math.round(n * 10) / 10;
+
+            async function updateConfirmPricing(qtyTon) {
+                const row = $('#confirmRateRow');
+                const spinner = $('#confirmRateSpinner');
+                const text = $('#confirmRateText');
+
+                if (!row) return;
+
+                // показать "загрузка"
+                spinner.style.display = '';
+                text.textContent = 'Получение курса…';
+
+                try {
+                    const resp = await fetch('https://myapihelper.na4u.ru/ton/price.php', { cache: 'no-store' });
+                    if (!resp.ok) throw new Error('bad status');
+                    const data = await resp.json();
+
+                    const priceRub = Number(data.price_rub);                 // например 168.2
+                    const rateRounded = round1(priceRub);                    // округление до 1 знака
+                    const perTon = rateRounded * PRICE_MARKUP;               // цена 1 TON с наценкой
+                    const perTonStr = perTon.toFixed(2);                     // до сотых
+                    const totalRub = Math.round(perTon * qtyTon);            // общая сумма, целые ₽
+
+                    // Пример формата:
+                    // "Курс: 168.2 ₽ · 1 TON = 193.43 ₽ · 10 TON = 1934 ₽"
+                    text.textContent = `Курс: ${rateRounded} ₽ · 1 TON = ${perTonStr} ₽ · ${qtyTon} TON = ${totalRub} ₽`;
+                    text.textContent = `[${rateRounded} ₽] Покупка: ${perTonStr} ₽, ${qtyTon} TON за ${totalRub} ₽`;
+                } catch (e) {
+                    text.textContent = 'Курс недоступен';
+                } finally {
+                    spinner.style.display = 'none';
+                }
+            }
+
             function goConfirm()  {
                 const {available}  =  computeState();
-                if  (qty  <  MIN_TO_SPEND)  { toast('Минимум ' + MIN_TO_SPEND); return  ; }
-                if  (qty  >  available)  {
+                if  (qty  <  MIN_TO_SPEND)  { toast('Минимум ' + MIN_TO_SPEND); return; }
+                if  (qty  >  available)  { toast('Недостаточно TON'); return; }
 
-                    toast('Недостаточно TON'); return  ;
-
-                }
                 closeSheet(sheets.spend);
+
+                // установить количество
                 $('#confirmQty').textContent = String(qty);
-                setTimeout(()  =>  openSheet(sheets.confirm),  120);
+
+                // подготовить строку курса к загрузке
+                const row = $('#confirmRateRow');
+                if (row) {
+                    $('#confirmRateText').textContent = 'Получение курса…';
+                    $('#confirmRateSpinner').style.display = '';
+                }
+
+                // открыть модал подтверждения
+                setTimeout(() => {
+                    openSheet(sheets.confirm);
+                    // подтянуть и показать курс
+                    updateConfirmPricing(qty);
+                }, 120);
             }
+
             function doSpend()  {
                 const st = loadSettings();
                 const cur = computeState();
