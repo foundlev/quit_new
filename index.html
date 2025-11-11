@@ -704,6 +704,24 @@
                 -webkit-mask-size: 95% 95%;
                 vertical-align: -0.125em;
             }
+            .linkrow {
+                display: flex;
+                justify-content: flex-end;
+                margin: 3px 6px 3px 3px;
+            }
+
+            .linklike {
+                background: transparent;
+                border: 0;
+                padding: 0;
+                font: inherit;
+                font-size: 15px;
+                color: var(--accent);
+                cursor: pointer;
+                text-decoration: underline;
+                opacity: .9;
+            }
+            .linklike:hover { opacity: 1; }
         </style>
     </head>
     <body>
@@ -820,7 +838,9 @@
                         <div class="qty__val mono" id="qtyVal">1</div>
                         <button class="qty__btn" id="qtyPlus" aria-label="Плюс"><i class="fa-solid fa-plus"></i></button>
                     </div>
-                    <small class="muted">От 10 до доступного баланса.</small>
+                    <div class="linkrow">
+                        <button type="button" class="linklike" id="qtyMaxBtn">Списать всё</button>
+                    </div>
                 </div>
                 <div class="row">
                     <button class="btn btn--ghost" id="cancelSpend">Отмена</button>
@@ -1231,7 +1251,7 @@
                 $('#testBadge').style.display = s.test ? '' : 'none';
 
                 // Balance
-                $('#spendBtn').disabled = s.available  <=  0;
+                $('#spendBtn').disabled = s.available  <  MIN_TO_SPEND;
                 $('#balanceVal').textContent = s.available;
                 if (s.available !== lastBalance)  {
 
@@ -1284,6 +1304,18 @@
                 $('#qtyVal').textContent = qty;
                 openSheet(sheets.spend);
             }
+
+            function qtyMax() {
+                const { available } = computeState();
+                if (available < MIN_TO_SPEND) {
+                    toast('Недостаточно TON');
+                    return;
+                }
+                qty = available; // весь доступный баланс
+                $('#qtyVal').textContent = qty;
+                pulse($('#qtyVal'));
+            }
+
             function qtyMinus()  {
 
                 const {available}  =  computeState();
@@ -1691,6 +1723,7 @@
             $('#qtyMinus').addEventListener('click', qtyMinus);
             $('#qtyPlus').addEventListener('click', qtyPlus);
             $('#goConfirm').addEventListener('click', goConfirm);
+            $('#qtyMaxBtn').addEventListener('click', qtyMax);
             $('#backFromConfirm').addEventListener('click', ()  =>  closeSheet(sheets.confirm));
             $('#confirmYes').addEventListener('click', doSpend);
             $('#closeDone').addEventListener('click', ()  =>  closeSheet(sheets.done));
