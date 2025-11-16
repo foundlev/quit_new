@@ -294,7 +294,8 @@ footer {
     font-size: 13px;
     color: var(--muted)
 }
-input[type="datetime-local"] {
+input[type="datetime-local"],
+input[type="number"] {
     width: 100%;
     border: 1px solid rgba(127, 127, 150, .35);
     background: var(--card);
@@ -711,4 +712,12 @@ input[type="datetime-local"]:focus {
 /* если у тебя нет @keyframes spin — добавь: */
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+#confetti {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 99999;  /* поверх всех оверлеев */
+    display: none;
 }

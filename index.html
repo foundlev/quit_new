@@ -94,9 +94,9 @@
                             <i class="fa-solid fa-bolt icon" style="margin-right:8px;vertical-align:middle"></i>
                             Шторм
                         </button>
-                        <button class="btn btn--ok" id="workoutBtn">
-                            <i class="fa-solid fa-dumbbell icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Спорт
+                        <button class="btn btn--ok" id="boostBtn">
+                            <i class="fa-solid fa-angles-up icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Бусты
                         </button>
                     </div>
                 </section>
@@ -174,6 +174,7 @@
 
         <!-- Итог (списание/бонус) -->
         <div class="overlay" id="sheetDone" role="dialog" aria-modal="true" aria-labelledby="doneTitle">
+            <canvas id="confetti" style="position:absolute; inset:0; pointer-events:none; z-index:50; display:none;"></canvas>
             <div class="sheet" role="document">
                 <div class="done__row">
                     <div>
@@ -258,7 +259,7 @@
         <div class="overlay" id="sheetWorkoutConfirm" role="dialog" aria-modal="true" aria-labelledby="wkConfirmTitle">
             <div class="sheet" role="document">
                 <h3 id="wkConfirmTitle">Добавить тренировку?</h3>
-                <p class="confirm__txt">За тренировку будет начислено <strong class="mono">+2</strong> TON и запись появится в истории.</p>
+                <p class="confirm__txt">За тренировку будет начислено <strong class="mono">+3</strong> TON и запись появится в истории.</p>
                 <div class="confirm__row">
                     <button class="btn btn--ghost" id="wkConfirmBack">Отмена</button>
                     <button class="btn btn--ok" id="wkConfirmYes">Подтвердить</button>
@@ -266,8 +267,125 @@
             </div>
         </div>
 
+        <!-- Подтверждение буста -->
+        <div class="overlay" id="sheetBoostConfirm" role="dialog" aria-modal="true" aria-labelledby="boostConfirmTitle">
+            <div class="sheet" role="document">
+                <h3 id="boostConfirmTitle">Подтвердить бонус?</h3>
+                <p class="confirm__txt" id="boostConfirmText">
+                    <!-- сюда JS подставит текст -->
+                </p>
+                <div class="confirm__row">
+                    <button class="btn btn--ghost" id="boostConfirmBack">Отмена</button>
+                    <button class="btn btn--ok" id="boostConfirmYes">Подтвердить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boost -->
+        <div class="overlay" id="sheetBoost" role="dialog" aria-modal="true" aria-labelledby="boostTitle">
+            <div class="sheet" role="document">
+                <h3 id="boostTitle">Бусты</h3>
+
+                <div class="field">
+                    <label>Выбери бонус</label>
+
+                    <div class="row">
+                        <button class="btn btn--ok" id="boostWorkout">
+                            <i class="fa-solid fa-dumbbell icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Спорт
+                        </button>
+                        <button class="btn btn--warning" id="boostRace">
+                            <i class="fa-solid fa-plane-departure icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Рейс
+                        </button>
+                    </div>
+
+                    <div class="row">
+                        <button class="btn btn--ok" id="boostReading">
+                            <i class="fa-solid fa-book-open icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Доки
+                        </button>
+                        <button class="btn btn--ok" id="boostClean">
+                            <i class="fa-solid fa-broom icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Уборка
+                        </button>
+                    </div>
+
+                    <div class="row">
+                        <button class="btn btn--ok" id="boostWake">
+                            <i class="fa-solid fa-sun icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Подъем
+                        </button>
+                    </div>
+                </div>
+
+                <button class="btn btn--ghost" id="closeBoost">Закрыть</button>
+            </div>
+        </div>
+
+        <!-- Чтение документов -->
+        <div class="overlay" id="sheetReading" role="dialog" aria-modal="true" aria-labelledby="readingTitle">
+            <div class="sheet" role="document">
+                <h3 id="readingTitle">Чтение документов</h3>
+
+                <div class="field">
+                    <label>Количество страниц</label>
+                    <div class="qty" role="group" aria-label="Количество страниц">
+                        <button class="qty__btn" id="readMinus" aria-label="Минус">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <div class="qty__val mono" id="readPagesVal">1</div>
+                        <button class="qty__btn" id="readPlus" aria-label="Плюс">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <small class="muted">Минимум 1 страница.</small>
+                </div>
+
+                <div class="field">
+                    <label>Язык</label>
+                    <div class="seg">
+                        <button class="btn" id="readLangRu" data-lang="ru">RU</button>
+                        <button class="btn" id="readLangEn" data-lang="en">EN</button>
+                    </div>
+                    <small class="muted">EN: +1 TON за 2 стр, RU: +1 TON за 3 стр.</small>
+                </div>
+
+                <div class="row">
+                    <button class="btn btn--ghost" id="readCancel">Отмена</button>
+                    <button class="btn btn--ok" id="readConfirm">Начислить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Рейс -->
+        <div class="overlay" id="sheetRace" role="dialog" aria-modal="true" aria-labelledby="raceTitle">
+            <div class="sheet" role="document">
+                <h3 id="raceTitle">Рейс</h3>
+
+                <div class="field">
+                    <label>Часы рейса</label>
+                    <div class="qty" role="group" aria-label="Часы рейса">
+                        <button class="qty__btn" id="raceMinus" aria-label="Минус">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <div class="qty__val mono" id="raceHoursVal">1</div>
+                        <button class="qty__btn" id="racePlus" aria-label="Плюс">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <small class="muted">От 1 до 12 часов. 1 час = 1 TON.</small>
+                </div>
+
+                <div class="row">
+                    <button class="btn btn--ghost" id="raceCancel">Отмена</button>
+                    <button class="btn btn--ok" id="raceConfirm">Начислить</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Конфетти -->
-        <canvas id="confetti" style=" position:fixed;inset:0;pointer-events:none;z-index:70;display:none;"></canvas>
+<!--        <canvas id="confetti"></canvas>-->
 
         <div class="toast" id="toast">Сохранено</div>
 

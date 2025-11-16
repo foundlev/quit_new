@@ -111,7 +111,7 @@ function fromLocalInputValue(str)  {
     return d.getTime();
 }
 
-/* ====== Core calc: 3 subs / day ====== */
+/* ====== Core calc: 4 subs / day ====== */
 function computeState()  {
     const {start,  spent,  bonus,  test} = loadSettings();
     const effectiveNow = test ? nowMs() + 24  *  3600_000 : nowMs();
@@ -119,7 +119,8 @@ function computeState()  {
     const startTs = start;
     const elapsedMs = Math.max(0, effectiveNow - startTs);
 
-    const ratePerMs = 3 / 86_400_000;
+    // ====== Core calc: 4 subs / day ======
+    const ratePerMs = 4 / 86_400_000;
     const accruedFloat = elapsedMs * ratePerMs;
     const accrued = Math.floor(accruedFloat);
 
@@ -284,7 +285,7 @@ function render()  {
     }
 
     $('#sinceLabel').textContent = formatSince(s.startTs);
-    $('#rateBadge').textContent = '3 TON / сутки';
+    $('#rateBadge').textContent = '4 TON / сутки';
     $('#testBadge').style.display = s.test ? '' : 'none';
 
     // Balance
@@ -334,6 +335,7 @@ function pulse(el)  {
 
 /* ====== Spend flow + History ====== */
 let qty = MIN_TO_SPEND;
+let pendingBoost = null; // сюда кладём бонус до подтверждения
 function openSpend()  {
     const {available} = computeState();
     if  (available  <  MIN_TO_SPEND) return  ;
@@ -661,7 +663,7 @@ function openWorkoutConfirm() {
 
 function workoutConfirmDo() {
     const st = loadSettings();
-    const bonusAdd = 2;
+    const bonusAdd = 3;
 
     const newBonus = st.bonus + bonusAdd;
     const hist = [{
@@ -687,6 +689,176 @@ function workoutConfirmDo() {
     setTimeout(() => { $('#doneChip').innerHTML = '<i class="fa-solid fa-check"></i> Готово'; }, 1600);
 }
 
+function openBoostConfirm(title, textHtml, bonusAdd, note) {
+    // сохраняем данные буста до подтверждения
+    pendingBoost = { bonusQty: bonusAdd, note };
+
+    $('#boostConfirmTitle').textContent = title;
+    $('#boostConfirmText').innerHTML = textHtml;
+
+    // всегда закрываем окно "Бусты", если оно открыто,
+    // чтобы подтверждение было сверху
+    if (sheets.boost) {
+        closeSheet(sheets.boost);
+    }
+
+    openSheet(sheets.boostConfirm);
+}
+
+function applyPendingBoost() {
+    if (!pendingBoost) return;
+
+    const st = loadSettings();
+    const bonusAdd = pendingBoost.bonusQty;
+
+    const hist = [{
+        t: nowMs(),
+        type: 'bonus',
+        qty: bonusAdd,
+        note: pendingBoost.note || ''
+    }, ...(st.history || [])].slice(0, 500);
+
+    saveSettings({
+        bonus: st.bonus + bonusAdd,
+        history: hist
+    });
+
+    closeSheet(sheets.boostConfirm);
+    // если у тебя есть отдельный sheet с бустами, он может называться sheetBoosts
+    const boostsSheet = $('#sheetBoosts');
+    if (boostsSheet) closeSheet(boostsSheet);
+
+    // финальное окно "Готово"
+    $('#doneDt').textContent = new Date().toLocaleString();
+    $('#doneQty').textContent = `+${bonusAdd}`;
+    $('#doneChip').innerHTML = '<i class="fa-solid fa-star"></i> Бонус';
+    openSheet(sheets.done);
+    vibr();
+    confettiBurst();   // ← ДОБАВЬ ЭТО
+    render();
+
+    setTimeout(() => {
+        $('#doneChip').innerHTML = '<i class="fa-solid fa-check"></i> Готово';
+    }, 1600);
+
+    pendingBoost = null;
+}
+
+/* ====== Boost (меню) ====== */
+function openBoostSheet() {
+    openSheet(sheets.boost);
+}
+
+/* ====== Reading (Чтение документов) ====== */
+let readLang = 'en';
+let readPages = 1;
+
+function setReadLang(lang) {
+    readLang = (lang === 'ru') ? 'ru' : 'en';
+    const ruBtn = $('#readLangRu');
+    const enBtn = $('#readLangEn');
+    if (!ruBtn || !enBtn) return;
+    ruBtn.classList.toggle('selected', readLang === 'ru');
+    enBtn.classList.toggle('selected', readLang === 'en');
+}
+
+function openReadingSheet() {
+    readPages = 1;
+    const valEl = $('#readPagesVal');
+    if (valEl) {
+        valEl.textContent = readPages;
+    }
+
+    setReadLang('en'); // по умолчанию EN (самый выгодный)
+    openSheet(sheets.reading);
+}
+
+function readingMinus() {
+    // от 1 до 999 страниц, при желании предел поменяешь
+    readPages = clamp(readPages - 1, 1, 999);
+    const valEl = $('#readPagesVal');
+    if (valEl) {
+        valEl.textContent = readPages;
+        pulse(valEl);
+    }
+}
+
+function readingPlus() {
+    readPages = clamp(readPages + 1, 1, 999);
+    const valEl = $('#readPagesVal');
+    if (valEl) {
+        valEl.textContent = readPages;
+        pulse(valEl);
+    }
+}
+
+function readingConfirmDo() {
+    const pages = readPages;
+
+    if (!pages || pages <= 0) {
+        toast('Введи количество страниц');
+        return;
+    }
+
+    // ru: +1 TON за 3 стр, en: +1 TON за 2 стр
+    const rate = (readLang === 'ru') ? 3 : 2;
+    const bonusAdd = Math.floor(pages / rate);
+
+    if (bonusAdd <= 0) {
+        toast('Мало страниц для бонуса');
+        return;
+    }
+
+    const langLabel = (readLang === 'ru') ? 'RU' : 'EN';
+    const descr = `доки: ${pages} стр. (${langLabel})`;
+
+    // закрываем окно «Доки», чтобы подтверждение было сверху
+    closeSheet(sheets.reading);
+
+    openBoostConfirm(
+        'Бонус за доки',
+        `Начислить <strong class="mono">+${bonusAdd}</strong> TON за ${descr}?`,
+        bonusAdd,
+        descr
+    );
+}
+
+/* ====== Race (Рейс) ====== */
+let raceHours = 1;
+
+function openRaceSheet() {
+    raceHours = 1;
+    $('#raceHoursVal').textContent = raceHours;
+    openSheet(sheets.race);
+}
+
+function raceMinus() {
+    raceHours = clamp(raceHours - 1, 1, 12);
+    $('#raceHoursVal').textContent = raceHours;
+    pulse($('#raceHoursVal'));
+}
+
+function racePlus() {
+    raceHours = clamp(raceHours + 1, 1, 12);
+    $('#raceHoursVal').textContent = raceHours;
+    pulse($('#raceHoursVal'));
+}
+
+function raceConfirmDo() {
+    const bonusAdd = raceHours; // 1 час = 1 TON
+    const descr = `рейс ${raceHours} ч`;
+
+    closeSheet(sheets.race);
+
+    openBoostConfirm(
+        'Бонус за рейс',
+        `Начислить <strong class="mono">+${bonusAdd}</strong> TON за ${descr}?`,
+        bonusAdd,
+        descr
+    );
+}
+
+/* ====== Overlays map ====== */
 /* ====== Overlays map ====== */
 const sheets = {
     settings:  $('#sheetSettings'),
@@ -696,10 +868,18 @@ const sheets = {
     history:  $('#sheetHistory'),
     craving:  $('#sheetCraving'),
     cravingConfirm:  $('#sheetCravingConfirm'),
-    workoutConfirm:  $('#sheetWorkoutConfirm')
+    workoutConfirm:  $('#sheetWorkoutConfirm'),
+    boost: $('#sheetBoost'),
+    race: $('#sheetRace'),
+    reading: $('#sheetReading'),
+    boostConfirm: $('#sheetBoostConfirm')
 };
-Object.values(sheets).forEach(ov  =>  {
-    ov.addEventListener('click',  e  =>  { if  (e.target  ===  ov) closeSheet(ov); });
+
+Object.values(sheets).forEach(ov => {
+    if (!ov) return;
+    ov.addEventListener('click', e => {
+        if (e.target === ov) closeSheet(ov);
+    });
 });
 
 /* ====== Settings events ====== */
@@ -730,6 +910,24 @@ function softReset()  {
     render();
 }
 
+function cleaningBoostDo() {
+    openBoostConfirm(
+        'Бонус за уборку',
+        'Начислить <strong class="mono">+4</strong> TON за уборку квартиры?',
+        4,
+        'уборка'
+    );
+}
+
+function wakeBoostDo() {
+    openBoostConfirm(
+        'Бонус: без телефона',
+        'Проснулся и сразу встал без телефона. Начислить <strong class="mono">+2</strong> TON?',
+        2,
+        'подъём без телефона'
+    );
+}
+
 /* ====== Confetti (лёгкая реализация) ====== */
 function confettiBurst()  {
     const cvs = $('#confetti');
@@ -740,7 +938,7 @@ function confettiBurst()  {
     cvs.style.display = 'block';
 
     const colors = ['#8fb0ff',  '#38d68a',  '#ffd06a',  '#ff7a86',  '#4c7df0'];
-    const N = 60;
+    const N = 60 * 3;
     const parts = Array.from({length:  N}, ()  =>  ({
         x: Math.random()  *  W,
 
@@ -800,7 +998,7 @@ $('#closeSettings').addEventListener('click', ()  =>  closeSheet(sheets.settings
 $('#saveSettings').addEventListener('click', saveSettingsSheet);
 $('#softReset').addEventListener('click', softReset);
 
-$('#workoutBtn').addEventListener('click', openWorkoutConfirm);
+$('#boostBtn').addEventListener('click', openBoostSheet);
 $('#wkConfirmBack').addEventListener('click', () => closeSheet(sheets.workoutConfirm));
 $('#wkConfirmYes').addEventListener('click', workoutConfirmDo);
 
@@ -816,6 +1014,36 @@ $('#qtyMaxBtn').addEventListener('click', qtyMax);
 $('#backFromConfirm').addEventListener('click', ()  =>  closeSheet(sheets.confirm));
 $('#confirmYes').addEventListener('click', doSpend);
 $('#closeDone').addEventListener('click', ()  =>  closeSheet(sheets.done));
+
+$('#boostWorkout').addEventListener('click', () => {
+    closeSheet(sheets.boost);
+    openWorkoutConfirm();
+});
+$('#boostRace').addEventListener('click', openRaceSheet);
+$('#boostReading').addEventListener('click', openReadingSheet);
+$('#boostClean').addEventListener('click', cleaningBoostDo);
+$('#boostWake').addEventListener('click', wakeBoostDo);
+
+$('#closeBoost').addEventListener('click', () => closeSheet(sheets.boost));
+
+$('#raceMinus').addEventListener('click', raceMinus);
+$('#racePlus').addEventListener('click', racePlus);
+$('#raceCancel').addEventListener('click', () => closeSheet(sheets.race));
+$('#raceConfirm').addEventListener('click', raceConfirmDo);
+$('#readCancel').addEventListener('click', () => closeSheet(sheets.reading));
+$('#readConfirm').addEventListener('click', readingConfirmDo);
+$('#readLangRu').addEventListener('click', () => setReadLang('ru'));
+$('#readLangEn').addEventListener('click', () => setReadLang('en'));
+
+$('#readMinus').addEventListener('click', readingMinus);
+$('#readPlus').addEventListener('click', readingPlus);
+
+$('#boostConfirmBack').addEventListener('click', () => {
+    pendingBoost = null;
+    closeSheet(sheets.boostConfirm);
+});
+
+$('#boostConfirmYes').addEventListener('click', applyPendingBoost);
 
 $('#cravingBtn').addEventListener('click', openCraving);
 document.querySelectorAll('#sheetCraving [data-level]').forEach(b  =>  {
