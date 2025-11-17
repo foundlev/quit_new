@@ -320,9 +320,20 @@
                             <i class="fa-solid fa-sun icon" style="margin-right:8px;vertical-align:middle"></i>
                             Подъем
                         </button>
+                        <button class="btn" id="boostSleep">
+                            <i class="fa-solid fa-moon icon"></i>
+                            Отбой
+                        </button>
+                    </div>
+
+                    <div class="row">
                         <button class="btn" id="boostWalk">
                             <i class="fa-solid fa-person-walking icon" style="margin-right:8px;vertical-align:middle"></i>
                             Прогулка
+                        </button>
+                        <button class="btn" id="boostClean">
+                            <i class="fa-solid fa-broom icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Уборка
                         </button>
                     </div>
 
@@ -331,9 +342,9 @@
                             <i class="fa-solid fa-book-open icon" style="margin-right:8px;vertical-align:middle"></i>
                             Доки
                         </button>
-                        <button class="btn" id="boostClean">
-                            <i class="fa-solid fa-broom icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Уборка
+                        <button class="btn" id="boostCoding">
+                            <i class="fa-solid fa-code icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Кодинг
                         </button>
                     </div>
                 </div>
@@ -373,6 +384,32 @@
                 <div class="row">
                     <button class="btn btn--ghost" id="readCancel">Отмена</button>
                     <button class="btn btn--ok" id="readConfirm">Начислить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Кодинг -->
+        <div class="overlay" id="sheetCoding" role="dialog" aria-modal="true" aria-labelledby="codingTitle">
+            <div class="sheet" role="document">
+                <h3 id="codingTitle">Кодинг</h3>
+
+                <div class="field">
+                    <label>Время кодинга</label>
+                    <div class="qty" role="group" aria-label="Время кодинга">
+                        <button class="qty__btn" id="codingMinus" aria-label="Минус">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <div class="qty__val mono" id="codingVal">0:30</div>
+                        <button class="qty__btn" id="codingPlus" aria-label="Плюс">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <small class="muted">От 0:30 до 5:00. 1 TON за каждые 30 минут.</small>
+                </div>
+
+                <div class="row">
+                    <button class="btn btn--ghost" id="codingCancel">Отмена</button>
+                    <button class="btn" id="codingConfirm">Начислить</button>
                 </div>
             </div>
         </div>

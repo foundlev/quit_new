@@ -7,7 +7,8 @@ const LS = {
     bonus:  'clean.bonus',
     test:  'clean.testMode',
     history:  'clean.history',
-    craving:  'clean.craving'
+    craving:  'clean.craving',
+    boostInfo: 'clean.boostInfo'
 };
 const DEFAULTS = { TEST_MODE:  false, GOAL_DAYS:  90 };
 const MIN_TO_SPEND = 10;
@@ -661,6 +662,11 @@ let workoutRecords = 0;
 
 /* ====== Workout (Тренировка) ====== */
 function openWorkoutConfirm() {
+    if (!canUseBoost('sport')) {
+        toast('Этот буст доступен раз в день и не чаще, чем раз в 8 часов.');
+        return;
+    }
+
     workoutRecords = 0;
     const valEl = $('#wkRecVal');
     if (valEl) {
@@ -686,44 +692,39 @@ function workoutConfirmDo() {
     const extra = Math.floor(workoutRecords / 2);  // +1 за каждые 2 рекорда
     const bonusAdd = base + extra;
 
-    const st = loadSettings();
-    const newBonus = st.bonus + bonusAdd;
-    const hist = [{
-        t: nowMs(),
-        type: 'bonus',
-        qty: bonusAdd,
-        note: workoutRecords > 0
-            ? `тренировка (${workoutRecords} рек.)`
-            : 'тренировка'
-    }, ...(st.history || [])].slice(0, 500);
+    if (bonusAdd <= 0) {
+        toast('Нечего начислять');
+        return;
+    }
 
-    saveSettings({ bonus: newBonus, history: hist });
+    const note = workoutRecords > 0
+        ? `тренировка (${workoutRecords} рек.)`
+        : 'тренировка';
 
+    // закрываем окно с выбором рекордов
     closeSheet(sheets.workoutConfirm);
 
-    // Итоговый лист как "бонус"
-    $('#doneDt').textContent = new Date().toLocaleString();
-    $('#doneQty').textContent = `+${bonusAdd}`;
-    $('#doneChip').innerHTML = '<i class="fa-solid fa-star"></i> Бонус';
-    openSheet(sheets.done);
-    vibr();
-    confettiBurst();
-    render();
-
-    setTimeout(() => {
-        $('#doneChip').innerHTML = '<i class="fa-solid fa-check"></i> Готово';
-    }, 1600);
+    // открываем общее окно подтверждения буста
+    openBoostConfirm(
+        'Бонус за тренировку',
+        `Начислить <strong class="mono">+${bonusAdd}</strong> TON за ${note}?`,
+        bonusAdd,
+        note,
+        'sport'      // имя буста для кулдауна
+    );
 }
 
-function openBoostConfirm(title, textHtml, bonusAdd, note) {
+function openBoostConfirm(title, textHtml, bonusAdd, note, boostName) {
     // сохраняем данные буста до подтверждения
-    pendingBoost = { bonusQty: bonusAdd, note };
+    pendingBoost = {
+        bonusQty: bonusAdd,
+        note,
+        boostName: boostName || null
+    };
 
     $('#boostConfirmTitle').textContent = title;
     $('#boostConfirmText').innerHTML = textHtml;
 
-    // всегда закрываем окно "Бусты", если оно открыто,
-    // чтобы подтверждение было сверху
     if (sheets.boost) {
         closeSheet(sheets.boost);
     }
@@ -749,18 +750,21 @@ function applyPendingBoost() {
         history: hist
     });
 
+    // если для этого буста есть кулдаун — фиксируем время использования
+    if (pendingBoost.boostName) {
+        markBoostUsed(pendingBoost.boostName);
+    }
+
     closeSheet(sheets.boostConfirm);
-    // если у тебя есть отдельный sheet с бустами, он может называться sheetBoosts
     const boostsSheet = $('#sheetBoosts');
     if (boostsSheet) closeSheet(boostsSheet);
 
-    // финальное окно "Готово"
     $('#doneDt').textContent = new Date().toLocaleString();
     $('#doneQty').textContent = `+${bonusAdd}`;
     $('#doneChip').innerHTML = '<i class="fa-solid fa-star"></i> Бонус';
     openSheet(sheets.done);
     vibr();
-    confettiBurst();   // ← ДОБАВЬ ЭТО
+    confettiBurst();
     render();
 
     setTimeout(() => {
@@ -772,6 +776,29 @@ function applyPendingBoost() {
 
 /* ====== Boost (меню) ====== */
 function openBoostSheet() {
+
+    // перед открытием — включаем/выключаем кнопки
+    const map = [
+        ['boostWorkout', 'sport'],
+        ['boostClean', 'clean'],
+        ['boostWake', 'wake'],
+        ['boostWalk', 'walk'],
+        ['boostSleep', 'sleep'],
+        ['boostCoding', null]   // null = нет ограничений
+    ];
+
+    map.forEach(([btnId, boostName]) => {
+        const el = $('#' + btnId);
+        if (!el) return;
+        el.disabled = !canUseBoost(boostName);
+
+        if (el.disabled) {
+            el.classList.add('btn--disabled');
+        } else {
+            el.classList.remove('btn--disabled');
+        }
+    });
+
     openSheet(sheets.boost);
 }
 
@@ -849,6 +876,62 @@ function readingConfirmDo() {
     );
 }
 
+/* ====== Coding (Кодинг) ====== */
+
+let codingMinutes = 30; // 30–300 (0.5–5 часов)
+
+function formatCodingLabel() {
+    const h = Math.floor(codingMinutes / 60);
+    const m = codingMinutes % 60;
+    const hh = h.toString();
+    const mm = m.toString().padStart(2, '0');
+    return `${hh}:${mm}`;
+}
+
+function openCodingSheet() {
+    codingMinutes = 30;
+    $('#codingVal').textContent = formatCodingLabel();
+    openSheet(sheets.coding);
+}
+
+function codingMinus() {
+    codingMinutes = clamp(codingMinutes - 30, 30, 300);
+    $('#codingVal').textContent = formatCodingLabel();
+    pulse($('#codingVal'));
+}
+
+function codingPlus() {
+    codingMinutes = clamp(codingMinutes + 30, 30, 300);
+    $('#codingVal').textContent = formatCodingLabel();
+    pulse($('#codingVal'));
+}
+
+function codingCancel() {
+    closeSheet(sheets.coding);
+}
+
+function codingConfirmDo() {
+    const blocks = Math.floor(codingMinutes / 30); // 1 TON за 30 минут
+    if (!blocks) {
+        toast('Минимум 30 минут');
+        return;
+    }
+
+    const bonusAdd = blocks;
+    const hours = (codingMinutes / 60).toFixed(1).replace('.0', '');
+    const descr = `кодинг ${hours} ч`;
+
+    closeSheet(sheets.coding);
+
+    openBoostConfirm(
+        'Бонус за кодинг',
+        `Начислить <strong class="mono">+${bonusAdd}</strong> TON за ${descr}?`,
+        bonusAdd,
+        descr
+        // boostName не передаём — ограничений по частоте нет
+    );
+}
+
 /* ====== Race (Рейс) ====== */
 let raceHours = 1;
 
@@ -885,7 +968,6 @@ function raceConfirmDo() {
 }
 
 /* ====== Overlays map ====== */
-/* ====== Overlays map ====== */
 const sheets = {
     settings:  $('#sheetSettings'),
     spend:  $('#sheetSpend'),
@@ -898,7 +980,8 @@ const sheets = {
     boost: $('#sheetBoost'),
     race: $('#sheetRace'),
     reading: $('#sheetReading'),
-    boostConfirm: $('#sheetBoostConfirm')
+    boostConfirm: $('#sheetBoostConfirm'),
+    coding: $('#sheetCoding')
 };
 
 Object.values(sheets).forEach(ov => {
@@ -932,34 +1015,119 @@ function softReset()  {
         history: [],
         craving: {active:  0, started:  0, level:  'm'}
     });
+
+    // сбрасываем историю использования бустов
+    localStorage.removeItem(LS.boostInfo);
+
     toast('Сброшено на текущий момент');
     render();
 }
 
+/* ====== Boost cooldown helpers ====== */
+const BOOST_COOLDOWN_MS = 8 * 3600_000; // 8 часов
+
+function getBoostState() {
+    try {
+        return JSON.parse(localStorage.getItem(LS.boostInfo) || '{}') || {};
+    } catch {
+        return {};
+    }
+}
+
+function saveBoostState(state) {
+    localStorage.setItem(LS.boostInfo, JSON.stringify(state || {}));
+}
+
+function markBoostUsed(name) {
+    const state = getBoostState();
+    state[name] = nowMs();
+    saveBoostState(state);
+}
+
+function canUseBoost(name) {
+    const state = getBoostState();
+    const last = Number(state[name] || 0);
+    if (!last) return true;
+
+    const now = nowMs();
+
+    // 8 часов ещё не прошло
+    if (now - last < BOOST_COOLDOWN_MS) {
+        return false;
+    }
+
+    // проверка смены календарного дня (локальное время)
+    const dLast = new Date(last);
+    const dNow = new Date(now);
+    const sameDay =
+        dLast.getFullYear() === dNow.getFullYear() &&
+        dLast.getMonth() === dNow.getMonth() &&
+        dLast.getDate() === dNow.getDate();
+
+    if (sameDay) {
+        return false;
+    }
+
+    return true;
+}
+
 function cleaningBoostDo() {
+    if (!canUseBoost('clean')) {
+        toast('Этот буст доступен раз в день и не чаще, чем раз в 8 часов.');
+        return;
+    }
+
     openBoostConfirm(
         'Бонус за уборку',
         'Начислить <strong class="mono">+4</strong> TON за уборку квартиры?',
         4,
-        'уборка'
+        'уборка',
+        'clean'
     );
 }
 
 function wakeBoostDo() {
+    if (!canUseBoost('wake')) {
+        toast('Этот буст доступен раз в день и не чаще, чем раз в 8 часов.');
+        return;
+    }
+
     openBoostConfirm(
         'Бонус: без телефона',
         'Проснулся и сразу встал без телефона. Начислить <strong class="mono">+2</strong> TON?',
         2,
-        'подъём без телефона'
+        'подъём без телефона',
+        'wake'
     );
 }
 
 function walkBoostDo() {
+    if (!canUseBoost('walk')) {
+        toast('Этот буст доступен раз в день и не чаще, чем раз в 8 часов.');
+        return;
+    }
+
     openBoostConfirm(
         'Бонус за прогулку',
         'Начислить <strong class="mono">+3</strong> TON за прогулку?',
         3,
-        'прогулка'
+        'прогулка',
+        'walk'
+    );
+}
+
+function sleepBoostDo() {
+    if (!canUseBoost('sleep')) {
+        toast('Этот буст доступен раз в день и не чаще, чем раз в 8 часов.');
+        return;
+    }
+
+    openBoostConfirm(
+        'Бонус за отбой',
+        'Отбой вовремя. Начислить <strong class="mono">+2</strong> TON?',
+        2,
+        'отбой',
+        'sleep'
     );
 }
 
@@ -1061,6 +1229,8 @@ $('#boostReading').addEventListener('click', openReadingSheet);
 $('#boostClean').addEventListener('click', cleaningBoostDo);
 $('#boostWake').addEventListener('click', wakeBoostDo);
 $('#boostWalk').addEventListener('click', walkBoostDo);
+$('#boostSleep').addEventListener('click', sleepBoostDo);
+$('#boostCoding').addEventListener('click', openCodingSheet);
 
 $('#closeBoost').addEventListener('click', () => closeSheet(sheets.boost));
 
@@ -1072,6 +1242,11 @@ $('#readCancel').addEventListener('click', () => closeSheet(sheets.reading));
 $('#readConfirm').addEventListener('click', readingConfirmDo);
 $('#readLangRu').addEventListener('click', () => setReadLang('ru'));
 $('#readLangEn').addEventListener('click', () => setReadLang('en'));
+
+$('#codingMinus').addEventListener('click', codingMinus);
+$('#codingPlus').addEventListener('click', codingPlus);
+$('#codingCancel').addEventListener('click', codingCancel);
+$('#codingConfirm').addEventListener('click', codingConfirmDo);
 
 $('#readMinus').addEventListener('click', readingMinus);
 $('#readPlus').addEventListener('click', readingPlus);

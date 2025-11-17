@@ -219,6 +219,11 @@ header, footer {
     overflow: hidden;
     transform: translateZ(0)
 }
+.btn--disabled {
+    opacity: .45 !important;
+    filter: grayscale(0.55);
+    pointer-events: none;
+}
 .btn:disabled {
     opacity: .5;
     box-shadow: none
