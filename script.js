@@ -932,24 +932,32 @@ function codingConfirmDo() {
     );
 }
 
+/* ====== Подтверждение изменения настроек ====== */
+
+let pendingSettingsAction = null; // 'save' | 'reset'
+
 /* ====== Race (Рейс) ====== */
 let raceHours = 1;
 
+function formatRaceHours(h) {
+    return `${h}:00`;
+}
+
 function openRaceSheet() {
     raceHours = 1;
-    $('#raceHoursVal').textContent = raceHours;
+    $('#raceHoursVal').textContent = formatRaceHours(raceHours);
     openSheet(sheets.race);
 }
 
 function raceMinus() {
     raceHours = clamp(raceHours - 1, 1, 12);
-    $('#raceHoursVal').textContent = raceHours;
+    $('#raceHoursVal').textContent = formatRaceHours(raceHours);
     pulse($('#raceHoursVal'));
 }
 
 function racePlus() {
     raceHours = clamp(raceHours + 1, 1, 12);
-    $('#raceHoursVal').textContent = raceHours;
+    $('#raceHoursVal').textContent = formatRaceHours(raceHours);
     pulse($('#raceHoursVal'));
 }
 
@@ -981,7 +989,8 @@ const sheets = {
     race: $('#sheetRace'),
     reading: $('#sheetReading'),
     boostConfirm: $('#sheetBoostConfirm'),
-    coding: $('#sheetCoding')
+    coding: $('#sheetCoding'),
+    settingsConfirm: $('#sheetSettingsConfirm'),
 };
 
 Object.values(sheets).forEach(ov => {
@@ -1198,8 +1207,34 @@ function tick()  {
 /* ====== Events bind ====== */
 $('#openSettings').addEventListener('click', openSettingsSheet);
 $('#closeSettings').addEventListener('click', ()  =>  closeSheet(sheets.settings));
-$('#saveSettings').addEventListener('click', saveSettingsSheet);
-$('#softReset').addEventListener('click', softReset);
+
+$('#saveSettings').addEventListener('click', () => {
+    pendingSettingsAction = 'save';
+    $('#settingsConfirmTitle').textContent = 'Сохранить настройки?';
+    $('#settingsConfirmText').textContent = 'Подтвердить сохранение настроек?';
+    openSheet(sheets.settingsConfirm);
+});
+
+$('#softReset').addEventListener('click', () => {
+    pendingSettingsAction = 'reset';
+    $('#settingsConfirmTitle').textContent = 'Сбросить данные?';
+    $('#settingsConfirmText').textContent = 'Все данные будут удалены. Вы уверены?';
+    openSheet(sheets.settingsConfirm);
+});
+$('#settingsConfirmBack').addEventListener('click', () => {
+    pendingSettingsAction = null;
+    closeSheet(sheets.settingsConfirm);
+});
+
+$('#settingsConfirmYes').addEventListener('click', () => {
+    if (pendingSettingsAction === 'save') {
+        saveSettingsSheet();
+    } else if (pendingSettingsAction === 'reset') {
+        softReset();
+    }
+    pendingSettingsAction = null;
+    closeSheet(sheets.settingsConfirm);
+});
 
 $('#boostBtn').addEventListener('click', openBoostSheet);
 $('#wkConfirmBack').addEventListener('click', () => closeSheet(sheets.workoutConfirm));

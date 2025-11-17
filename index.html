@@ -440,9 +440,19 @@
             </div>
         </div>
 
-        <!-- Конфетти -->
-<!--        <canvas id="confetti"></canvas>-->
+        <!-- Подтверждение действий в настройках -->
+        <div class="overlay" id="sheetSettingsConfirm">
+            <div class="sheet">
+                <h3 id="settingsConfirmTitle">Подтверждение</h3>
+                <p id="settingsConfirmText" class="confirm__txt">Вы уверены?</p>
+                <div class="confirm__row">
+                    <button class="btn btn--ghost" id="settingsConfirmBack">Отмена</button>
+                    <button class="btn btn--ok" id="settingsConfirmYes">Подтвердить</button>
+                </div>
+            </div>
+        </div>
 
+        <!-- Конфетти -->
         <div class="toast" id="toast">Сохранено</div>
 
         <script src="script.js"></script>
