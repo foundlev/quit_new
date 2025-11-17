@@ -657,20 +657,44 @@ function levelNote(l)  {
 }
 
 /* ====== Workout (Тренировка) ====== */
+let workoutRecords = 0;
+
+/* ====== Workout (Тренировка) ====== */
 function openWorkoutConfirm() {
+    workoutRecords = 0;
+    const valEl = $('#wkRecVal');
+    if (valEl) {
+        valEl.textContent = workoutRecords;
+    }
     openSheet(sheets.workoutConfirm);
 }
 
-function workoutConfirmDo() {
-    const st = loadSettings();
-    const bonusAdd = 3;
+function workoutRecMinus() {
+    workoutRecords = clamp(workoutRecords - 1, 0, 999);
+    $('#wkRecVal').textContent = workoutRecords;
+    pulse($('#wkRecVal'));
+}
 
+function workoutRecPlus() {
+    workoutRecords = clamp(workoutRecords + 1, 0, 999);
+    $('#wkRecVal').textContent = workoutRecords;
+    pulse($('#wkRecVal'));
+}
+
+function workoutConfirmDo() {
+    const base = 3;                                // базовый бонус
+    const extra = Math.floor(workoutRecords / 2);  // +1 за каждые 2 рекорда
+    const bonusAdd = base + extra;
+
+    const st = loadSettings();
     const newBonus = st.bonus + bonusAdd;
     const hist = [{
         t: nowMs(),
         type: 'bonus',
         qty: bonusAdd,
-        note: 'тренировка'
+        note: workoutRecords > 0
+            ? `тренировка (${workoutRecords} рек.)`
+            : 'тренировка'
     }, ...(st.history || [])].slice(0, 500);
 
     saveSettings({ bonus: newBonus, history: hist });
@@ -686,7 +710,9 @@ function workoutConfirmDo() {
     confettiBurst();
     render();
 
-    setTimeout(() => { $('#doneChip').innerHTML = '<i class="fa-solid fa-check"></i> Готово'; }, 1600);
+    setTimeout(() => {
+        $('#doneChip').innerHTML = '<i class="fa-solid fa-check"></i> Готово';
+    }, 1600);
 }
 
 function openBoostConfirm(title, textHtml, bonusAdd, note) {
@@ -928,6 +954,15 @@ function wakeBoostDo() {
     );
 }
 
+function walkBoostDo() {
+    openBoostConfirm(
+        'Бонус за прогулку',
+        'Начислить <strong class="mono">+3</strong> TON за прогулку?',
+        3,
+        'прогулка'
+    );
+}
+
 /* ====== Confetti (лёгкая реализация) ====== */
 function confettiBurst()  {
     const cvs = $('#confetti');
@@ -944,7 +979,7 @@ function confettiBurst()  {
 
         y: -20  *  DPR,
         vx: (Math.random()  -  .5)  *  0.8  *  DPR,
-        vy: (Math.random()  *  2  +  2)  *  DPR,
+        vy: (Math.random()  *  2  +  1)  *  DPR,
         s: (Math.random()  *  6  +  4)  *  DPR,
         c: colors[Math.floor(Math.random()  *  colors.length)],
         a: 1,
@@ -962,12 +997,12 @@ function confettiBurst()  {
         ctx.clearRect(0,  0,  W,  H);
         let alive  =  false;
         for  (const p of parts)  {
-            p.vy += 0.03  *  DPR;
-            p.x += p.vx  *  dt  *  0.06;
-            p.y += p.vy  *  dt  *  0.06;
+            p.vy += 0.0015  *  DPR;
+            p.y += p.vy * dt * 0.05;
+            p.x += p.vx * dt * 0.05;
             p.rot += p.vr;
-            p.a -= 0.004  *  dt;
-            if  (p.a  >  0 && p.y  <  H  +  40  *  DPR)  { alive  =  true; }
+            p.a -= 0.001  *  dt;
+            if  (p.a  >  0 && p.y  <  H  +  320  *  DPR)  { alive  =  true; }
             ctx.save();
             ctx.globalAlpha = Math.max(0,  p.a);
             ctx.translate(p.x,  p.y);
@@ -1001,6 +1036,8 @@ $('#softReset').addEventListener('click', softReset);
 $('#boostBtn').addEventListener('click', openBoostSheet);
 $('#wkConfirmBack').addEventListener('click', () => closeSheet(sheets.workoutConfirm));
 $('#wkConfirmYes').addEventListener('click', workoutConfirmDo);
+$('#wkRecMinus').addEventListener('click', workoutRecMinus);
+$('#wkRecPlus').addEventListener('click', workoutRecPlus);
 
 $('#openHistory').addEventListener('click', openHistory);
 $('#closeHistory').addEventListener('click', ()  =>  closeSheet(sheets.history));
@@ -1023,6 +1060,7 @@ $('#boostRace').addEventListener('click', openRaceSheet);
 $('#boostReading').addEventListener('click', openReadingSheet);
 $('#boostClean').addEventListener('click', cleaningBoostDo);
 $('#boostWake').addEventListener('click', wakeBoostDo);
+$('#boostWalk').addEventListener('click', walkBoostDo);
 
 $('#closeBoost').addEventListener('click', () => closeSheet(sheets.boost));
 

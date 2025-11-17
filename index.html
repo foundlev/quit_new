@@ -259,7 +259,22 @@
         <div class="overlay" id="sheetWorkoutConfirm" role="dialog" aria-modal="true" aria-labelledby="wkConfirmTitle">
             <div class="sheet" role="document">
                 <h3 id="wkConfirmTitle">Добавить тренировку?</h3>
-                <p class="confirm__txt">За тренировку будет начислено <strong class="mono">+3</strong> TON и запись появится в истории.</p>
+                <p class="confirm__txt">
+                    Бонус за тренировку: <strong class="mono">+3</strong> TON.
+                </p>
+                <div class="field">
+                    <label>Рекорды на тренировке</label>
+                    <div class="qty" role="group" aria-label="Количество рекордов">
+                        <button class="qty__btn" id="wkRecMinus" aria-label="Минус">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <div class="qty__val mono" id="wkRecVal">0</div>
+                        <button class="qty__btn" id="wkRecPlus" aria-label="Плюс">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <small class="muted">+1 TON за каждые 2 рекорда</small>
+                </div>
                 <div class="confirm__row">
                     <button class="btn btn--ghost" id="wkConfirmBack">Отмена</button>
                     <button class="btn btn--ok" id="wkConfirmYes">Подтвердить</button>
@@ -294,27 +309,31 @@
                             <i class="fa-solid fa-dumbbell icon" style="margin-right:8px;vertical-align:middle"></i>
                             Спорт
                         </button>
-                        <button class="btn btn--warning" id="boostRace">
+                        <button class="btn btn--ok" id="boostRace">
                             <i class="fa-solid fa-plane-departure icon" style="margin-right:8px;vertical-align:middle"></i>
                             Рейс
                         </button>
                     </div>
 
                     <div class="row">
-                        <button class="btn btn--ok" id="boostReading">
-                            <i class="fa-solid fa-book-open icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Доки
+                        <button class="btn" id="boostWake">
+                            <i class="fa-solid fa-sun icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Подъем
                         </button>
-                        <button class="btn btn--ok" id="boostClean">
-                            <i class="fa-solid fa-broom icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Уборка
+                        <button class="btn" id="boostWalk">
+                            <i class="fa-solid fa-person-walking icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Прогулка
                         </button>
                     </div>
 
                     <div class="row">
-                        <button class="btn btn--ok" id="boostWake">
-                            <i class="fa-solid fa-sun icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Подъем
+                        <button class="btn" id="boostReading">
+                            <i class="fa-solid fa-book-open icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Доки
+                        </button>
+                        <button class="btn" id="boostClean">
+                            <i class="fa-solid fa-broom icon" style="margin-right:8px;vertical-align:middle"></i>
+                            Уборка
                         </button>
                     </div>
                 </div>
