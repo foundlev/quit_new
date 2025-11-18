@@ -659,6 +659,7 @@ function levelNote(l)  {
 
 /* ====== Workout (Тренировка) ====== */
 let workoutRecords = 0;
+let workoutFast = false;
 
 /* ====== Workout (Тренировка) ====== */
 function openWorkoutConfirm() {
@@ -668,10 +669,18 @@ function openWorkoutConfirm() {
     }
 
     workoutRecords = 0;
+    workoutFast = false;              // сброс флага «< 2 часов»
+
     const valEl = $('#wkRecVal');
     if (valEl) {
         valEl.textContent = workoutRecords;
     }
+
+    const fastBtn = $('#wkFastBtn');  // снять подсветку кнопки
+    if (fastBtn) {
+        fastBtn.classList.remove('selected');
+    }
+
     openSheet(sheets.workoutConfirm);
 }
 
@@ -690,7 +699,8 @@ function workoutRecPlus() {
 function workoutConfirmDo() {
     const base = 3;                                // базовый бонус
     const extra = Math.floor(workoutRecords / 2);  // +1 за каждые 2 рекорда
-    const bonusAdd = base + extra;
+    let bonusAdd = base + extra;
+    if (workoutFast) bonusAdd += 3;
 
     if (bonusAdd <= 0) {
         toast('Нечего начислять');
@@ -1282,6 +1292,11 @@ $('#codingMinus').addEventListener('click', codingMinus);
 $('#codingPlus').addEventListener('click', codingPlus);
 $('#codingCancel').addEventListener('click', codingCancel);
 $('#codingConfirm').addEventListener('click', codingConfirmDo);
+
+$('#wkFastBtn').addEventListener('click', () => {
+    workoutFast = !workoutFast;
+    $('#wkFastBtn').classList.toggle('selected', workoutFast);
+});
 
 $('#readMinus').addEventListener('click', readingMinus);
 $('#readPlus').addEventListener('click', readingPlus);
