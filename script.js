@@ -11,7 +11,16 @@ const LS = {
     boostInfo: 'clean.boostInfo'
 };
 const DEFAULTS = { TEST_MODE:  false, GOAL_DAYS:  30 };
-const MIN_TO_SPEND = 10;
+
+function getDailySpendMin() {
+    const now = new Date();
+
+    const seed = now.getFullYear() * 10_000 + now.getMonth() * 100 + now.getDate();
+    return (seed * 1337 + 42) % 90 + 10;
+}
+
+
+const MIN_TO_SPEND = getDailySpendMin();
 
 const $ = s => document.querySelector(s);
 const nowMs = () => Date.now();
@@ -288,6 +297,7 @@ function render()  {
     $('#sinceLabel').textContent = formatSince(s.startTs);
     $('#rateBadge').textContent = '4 TON / сутки';
     $('#testBadge').style.display = s.test ? '' : 'none';
+    $('#spendMinBadge').textContent = 'MIN ' + MIN_TO_SPEND + ' TON';
 
     // Balance
     $('#spendBtn').disabled = s.available  <  MIN_TO_SPEND;
