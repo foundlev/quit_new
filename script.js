@@ -10,7 +10,7 @@ const LS = {
     craving:  'clean.craving',
     boostInfo: 'clean.boostInfo'
 };
-const DEFAULTS = { TEST_MODE:  false, GOAL_DAYS:  90 };
+const DEFAULTS = { TEST_MODE:  false, GOAL_DAYS:  30 };
 const MIN_TO_SPEND = 10;
 
 const $ = s => document.querySelector(s);
@@ -1070,22 +1070,22 @@ function canUseBoost(name) {
 
     const now = nowMs();
 
-    // 8 часов ещё не прошло
+    // 8 часов ещё не прошло BOOST_COOLDOWN_MS
     if (now - last < BOOST_COOLDOWN_MS) {
         return false;
     }
 
-    // проверка смены календарного дня (локальное время)
-    const dLast = new Date(last);
-    const dNow = new Date(now);
-    const sameDay =
-        dLast.getFullYear() === dNow.getFullYear() &&
-        dLast.getMonth() === dNow.getMonth() &&
-        dLast.getDate() === dNow.getDate();
-
-    if (sameDay) {
-        return false;
-    }
+    // // проверка смены календарного дня (локальное время)
+    // const dLast = new Date(last);
+    // const dNow = new Date(now);
+    // const sameDay =
+    //     dLast.getFullYear() === dNow.getFullYear() &&
+    //     dLast.getMonth() === dNow.getMonth() &&
+    //     dLast.getDate() === dNow.getDate();
+    //
+    // if (sameDay) {
+    //     return false;
+    // }
 
     return true;
 }
