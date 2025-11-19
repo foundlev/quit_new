@@ -1146,11 +1146,6 @@ function walkBoostDo() {
 }
 
 function noSugarBoostDo() {
-    if (!canUseBoost('noSugar')) {
-        toast('Этот буст доступен раз в день и не чаще, чем раз в 8 часов.');
-        return;
-    }
-
     openBoostConfirm(
         'Без сладкого',
         'Держался без сладкого. Начислить <strong class="mono">+2</strong> TON?',
