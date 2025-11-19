@@ -1145,18 +1145,18 @@ function walkBoostDo() {
     );
 }
 
-function sleepBoostDo() {
-    if (!canUseBoost('sleep')) {
+function noSugarBoostDo() {
+    if (!canUseBoost('noSugar')) {
         toast('Этот буст доступен раз в день и не чаще, чем раз в 8 часов.');
         return;
     }
 
     openBoostConfirm(
-        'Бонус за отбой',
-        'Отбой вовремя. Начислить <strong class="mono">+2</strong> TON?',
+        'Без сладкого',
+        'Держался без сладкого. Начислить <strong class="mono">+2</strong> TON?',
         2,
-        'отбой',
-        'sleep'
+        'без сладкого',
+        'noSugar'
     );
 }
 
@@ -1284,7 +1284,7 @@ $('#boostReading').addEventListener('click', openReadingSheet);
 $('#boostClean').addEventListener('click', cleaningBoostDo);
 $('#boostWake').addEventListener('click', wakeBoostDo);
 $('#boostWalk').addEventListener('click', walkBoostDo);
-$('#boostSleep').addEventListener('click', sleepBoostDo);
+$('#boostSleep').addEventListener('click', noSugarBoostDo);
 $('#boostCoding').addEventListener('click', openCodingSheet);
 
 $('#closeBoost').addEventListener('click', () => closeSheet(sheets.boost));
