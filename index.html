@@ -54,6 +54,11 @@
                     <div class="badges">
                         <span class="badge" id="rateBadge">X TON / сутки</span>
                         <span class="badge" id="spendMinBadge">MIN X TON</span>
+                        <span class="pill pill--weak" id="weaknessPill" style="display:none;">
+                            <i class="fa-solid fa-flag icon" aria-hidden="true"></i>
+                            <span>Слабость</span>
+                            <span class="mono" id="weaknessAgo">—</span>
+                        </span>
                         <span class="badge" id="testBadge" style=" display:none;">Тест: +24ч</span>
                         <span class="pill" id="cravingPill" style=" display:none;"><i class="fa-solid fa-bolt"></i> шторм активен</span>
                     </div>
@@ -229,6 +234,18 @@
 
                 <div class="divider"></div>
 
+                <div class="field">
+                    <button class="btn btn--ghost-danger" id="weaknessMarkBtn">
+                        <i class="fa-solid fa-flag icon" style="margin-right:8px;vertical-align:middle"></i>
+                        Отметить слабость
+                    </button>
+                    <small class="muted">
+                        Фиксирует момент срыва, чтобы видеть, сколько времени ты держишься.
+                    </small>
+                </div>
+
+                <div class="divider"></div>
+
                 <div id="crvActionsIdle" class="row">
                     <button class="btn btn--ghost" id="closeCraving">Закрыть</button>
                     <button class="btn btn--warning" id="cravingStart">Начать</button>
@@ -252,6 +269,29 @@
                 <div class="confirm__row">
                     <button class="btn btn--ghost" id="crvConfirmBack">Назад</button>
                     <button class="btn btn--ok" id="crvConfirmYes">Подтвердить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Подтверждение слабости -->
+        <div class="overlay" id="sheetWeaknessConfirm" role="dialog" aria-modal="true" aria-labelledby="weakConfirmTitle">
+            <div class="sheet" role="document">
+                <h3 id="weakConfirmTitle">Отметить слабость?</h3>
+                <p class="confirm__txt">
+                    Вы уверены, что хотите отметить слабость?
+                </p>
+
+                <div class="field">
+                    <label for="weakDt">Когда произошла слабость?</label>
+                    <input type="datetime-local" id="weakDt">
+                    <small class="muted">
+                        По умолчанию — текущее время. Можно сдвинуть, если слабость была раньше.
+                    </small>
+                </div>
+
+                <div class="confirm__row">
+                    <button class="btn btn--ghost" id="weakConfirmBack">Отмена</button>
+                    <button class="btn btn--danger" id="weakConfirmYes">Отметить</button>
                 </div>
             </div>
         </div>

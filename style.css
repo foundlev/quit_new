@@ -161,6 +161,19 @@ header, footer {
     animation: blink 1.8s ease-in-out infinite
 }
 
+.pill--weak {
+    background: color-mix(in oklab, var(--danger) 14%, transparent);
+    color: var(--danger);
+    animation: none;      /* без мигания */
+    font-weight: 600;
+}
+
+.pill--weak-faded {
+    background: color-mix(in oklab, var(--danger) 4%, transparent);
+    color: color-mix(in oklab, var(--danger) 40%, var(--muted));
+    opacity: .8;
+}
+
 .balance {
     display: grid;
     gap: 12px
@@ -239,6 +252,12 @@ header, footer {
 }
 .btn--danger {
     background: var(--danger)
+}
+.btn--ghost-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    box-shadow: none;
 }
 .btn--warning {
     background: var(--warning);

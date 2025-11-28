@@ -8,7 +8,8 @@ const LS = {
     test:  'clean.testMode',
     history:  'clean.history',
     craving:  'clean.craving',
-    boostInfo: 'clean.boostInfo'
+    boostInfo: 'clean.boostInfo',
+    weakness: 'clean.weakness'
 };
 const DEFAULTS = { TEST_MODE:  false, GOAL_DAYS:  30 };
 
@@ -75,19 +76,29 @@ function loadSettings()  {
     const spent = Number(localStorage.getItem(LS.spent)) || 0;
     const bonus = Number(localStorage.getItem(LS.bonus)) || 0;
     const test = localStorage.getItem(LS.test)  ===  '1';
+
     let history = [];
     try  {
 
         history = JSON.parse(localStorage.getItem(LS.history)  ||  '[]');
 
-    }catch  { history  =  []; }
+    } catch  { history  =  []; }
+
     let craving = null;
     try  {
 
         craving = JSON.parse(localStorage.getItem(LS.craving)  ||  'null');
 
-    }catch  { craving  =  null; }
-    return {start,  spent,  bonus,  test,  history,  craving};
+    } catch  { craving  =  null; }
+
+    let weakness = 0;
+    try {
+        weakness = Number(localStorage.getItem(LS.weakness) || 0);
+    } catch {
+        weakness = 0;
+    }
+
+    return { start, spent, bonus, test, history, craving, weakness };
 }
 function saveSettings(obj)  {
     if  ('start' in obj) localStorage.setItem(LS.startTs,  String(obj.start  ||  0));
@@ -96,6 +107,7 @@ function saveSettings(obj)  {
     if  ('test' in obj) localStorage.setItem(LS.test,  obj.test  ?  '1'  :  '0');
     if  ('history' in obj) localStorage.setItem(LS.history, JSON.stringify(obj.history  ||  []));
     if  ('craving' in obj) localStorage.setItem(LS.craving, JSON.stringify(obj.craving));
+    if ('weakness' in obj) localStorage.setItem(LS.weakness, String(obj.weakness || 0));
 }
 function ensureStart()  {
     const st = loadSettings().start;
@@ -194,6 +206,19 @@ function fmtETA(ms)  {
     if  (mm) parts.push(mm  +  'м');
     parts.push(ss  +  'с');
     return parts.join(' ');
+}
+function formatAgo(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const days  = Math.floor(s / 86400);
+    const hours = Math.floor((s % 86400) / 3600);
+
+    if (days === 0 && hours === 0) {
+        return 'только что';
+    }
+    if (days === 0) {
+        return `${hours} ч назад`;
+    }
+    return `${days} дн ${hours} ч назад`;
 }
 function toast(msg  =  'Сохранено',  t  =  1400)  {
     const el  =  $('#toast');
@@ -325,11 +350,30 @@ function render()  {
         lastPct = pct;
     }
 
-    // Craving pill + caption
-    const {craving} = loadSettings();
+    const {craving, weakness} = loadSettings();
     const active = (craving && craving.active);
     $('#cravingPill').style.display = active ? '' : 'none';
-    $('#cravingBtn').innerHTML = '<i class="fa-solid fa-bolt icon" style="margin-right:8px;vertical-align:middle"></i> Шторм';
+    $('#cravingBtn').innerHTML =
+        '<i class="fa-solid fa-bolt icon" style="margin-right:8px;vertical-align:middle"></i> Шторм';
+
+    // слабость
+    const weakPill = $('#weaknessPill');
+    const weakAgo = $('#weaknessAgo');
+    if (weakPill && weakAgo) {
+        if (weakness && weakness > 0) {
+            const ageMs = nowMs() - weakness;
+            weakPill.style.display = '';
+            weakAgo.textContent = formatAgo(ageMs);
+
+            // если слабость была больше суток назад — делаем плашку более блеклой
+            const ONE_DAY_MS = 86_400_000;
+            const faded = ageMs > ONE_DAY_MS;
+            weakPill.classList.toggle('pill--weak-faded', faded);
+        } else {
+            weakPill.style.display = 'none';
+            weakPill.classList.remove('pill--weak-faded');
+        }
+    }
 }
 
 function pulse(el)  {
@@ -1011,6 +1055,7 @@ const sheets = {
     boostConfirm: $('#sheetBoostConfirm'),
     coding: $('#sheetCoding'),
     settingsConfirm: $('#sheetSettingsConfirm'),
+    weaknessConfirm: $('#sheetWeaknessConfirm'),
 };
 
 Object.values(sheets).forEach(ov => {
@@ -1334,6 +1379,32 @@ $('#crvConfirmBack').addEventListener('click', ()  =>  {
 
 });
 $('#crvConfirmYes').addEventListener('click', cravingFinishDo);
+
+$('#weaknessMarkBtn').addEventListener('click', () => {
+    const input = $('#weakDt');
+    if (input) {
+        input.value = toLocalInputValue(nowMs()); // по умолчанию — сейчас
+    }
+    openSheet(sheets.weaknessConfirm);
+});
+
+$('#weakConfirmBack').addEventListener('click', () => {
+    closeSheet(sheets.weaknessConfirm);
+});
+
+$('#weakConfirmYes').addEventListener('click', () => {
+    const input = $('#weakDt');
+    let ts = nowMs();
+
+    if (input && input.value) {
+        ts = fromLocalInputValue(input.value);
+    }
+
+    saveSettings({ weakness: ts });
+    toast('Слабость отмечена');
+    closeSheet(sheets.weaknessConfirm);
+    render();
+});
 
 /* ====== Init ====== */
 ensureStart();
