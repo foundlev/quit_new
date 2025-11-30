@@ -1092,6 +1092,7 @@ function softReset()  {
 
     // сбрасываем историю использования бустов
     localStorage.removeItem(LS.boostInfo);
+    localStorage.removeItem(LS.weakness);
 
     toast('Сброшено на текущий момент');
     render();
