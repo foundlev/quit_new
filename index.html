@@ -1,515 +1,1301 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
-    <head>
-        <meta charset="utf-8">
-        <title>Сила × 90</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-        <meta name="color-scheme" content="light dark">
-        <!-- Font Awesome (локальный путь, как у тебя) -->
-        <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+<head>
+    <meta charset="utf-8">
+    <title>Сила × 90</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+    <meta name="color-scheme" content="light dark">
+    <!-- Font Awesome (локальный путь, как у тебя) -->
+    <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
 
-        <!-- Manifest -->
-        <link rel="manifest" href="/manifest.webmanifest">
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.webmanifest">
 
-        <!-- Цвет статус-бара и системных UI (Android + Chrome iOS) -->
-        <meta name="theme-color" content="#141821" media="(prefers-color-scheme: dark)">
-        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <!-- Цвет статус-бара и системных UI (Android + Chrome iOS) -->
+    <meta name="theme-color" content="#141821" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 
-        <!-- iOS PWA full-screen -->
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <!-- Варианты: default / black / black-translucent. Для Dynamic Island чаще лучше translucent -->
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- iOS PWA full-screen -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- Варианты: default / black / black-translucent. Для Dynamic Island чаще лучше translucent -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-        <meta name="apple-mobile-web-app-title" content="Сила × 90">
+    <meta name="apple-mobile-web-app-title" content="Сила × 90">
 
-        <!-- iOS иконки -->
-        <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" sizes="180x180">
-        <link rel="apple-touch-icon" href="icons/apple-touch-icon-167.png" sizes="167x167">
-        <link rel="apple-touch-icon" href="icons/apple-touch-icon-152.png" sizes="152x152">
-        <link rel="apple-touch-icon" href="icons/apple-touch-icon-120.png" sizes="120x120">
+    <!-- iOS иконки -->
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" sizes="180x180">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon-167.png" sizes="167x167">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon-152.png" sizes="152x152">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon-120.png" sizes="120x120">
+    <style>
+        :root {
+            /* Светлая тема */
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --progress-bg: #e2e8f0;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --border-color: #e2e8f0;
 
-        <link rel="stylesheet" href="style.css">
+            /* Цвета прогресс-баров */
+            --total-color: #6366f1;
+            --path-color: #10b981;
+            --control-color: #f59e0b;
+            --peace-color: #3b82f6;
 
-    </head>
-    <body>
-        <div class="wrap">
-            <header>
-                <div class="title">
-                    <span class="title-chip"><i class="fa-solid fa-hand-fist"></i> Сила × 90</span>
+            /* Кнопки */
+            --button-color: #6366f1;
+            --button-hover: #4f46e5;
+
+            /* Анимации */
+            --reset-animation: resetPulse 0.3s ease;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* Темная тема */
+                --bg-color: #0f172a;
+                --card-bg: #1e293b;
+                --text-color: #f1f5f9;
+                --progress-bg: #334155;
+                --shadow-color: rgba(0, 0, 0, 0.2);
+                --border-color: #334155;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .app-container {
+            max-width: 100%;
+            min-height: 100vh;
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Общий прогресс */
+        .total-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+            border: 2px solid rgba(99, 102, 241, 0.2);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .total-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--total-color), #8b5cf6);
+        }
+
+        .total-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .total-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--total-color), #8b5cf6);
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .total-info {
+            flex: 1;
+        }
+
+        .total-title {
+            font-size: 1rem;
+            font-weight: 600;
+            opacity: 0.8;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .total-percent {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--total-color);
+            line-height: 1;
+        }
+
+        .total-progress {
+            height: 12px;
+            background-color: var(--progress-bg);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .total-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--total-color), #8b5cf6);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .total-progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        /* Карточки прогрессов - компактные */
+        .progress-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .progress-card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 4px 16px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Цвета для карточек */
+        .card-path {
+            border-top: 3px solid var(--path-color);
+        }
+
+        .card-control {
+            border-top: 3px solid var(--control-color);
+        }
+
+        .card-peace {
+            border-top: 3px solid var(--peace-color);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .card-path .card-icon {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--path-color);
+        }
+
+        .card-control .card-icon {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: var(--control-color);
+        }
+
+        .card-peace .card-icon {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: var(--peace-color);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .card-percent {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .card-path .card-percent {
+            color: var(--path-color);
+        }
+
+        .card-control .card-percent {
+            color: var(--control-color);
+        }
+
+        .card-peace .card-percent {
+            color: var(--peace-color);
+        }
+
+        /* Время в одну строку */
+        .card-time {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .time-days {
+            font-size: 1.3rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .time-separator {
+            font-size: 0.8rem;
+            opacity: 0.5;
+        }
+
+        .time-clock {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .card-path .time-days,
+        .card-path .time-clock {
+            color: var(--path-color);
+        }
+
+        .card-control .time-days,
+        .card-control .time-clock {
+            color: var(--control-color);
+        }
+
+        .card-peace .time-days,
+        .card-peace .time-clock {
+            color: var(--peace-color);
+        }
+
+        .card-progress {
+            height: 6px;
+            background-color: var(--progress-bg);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .card-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .card-path .card-progress-fill {
+            background: linear-gradient(90deg, var(--path-color), #34d399);
+        }
+
+        .card-control .card-progress-fill {
+            background: linear-gradient(90deg, var(--control-color), #fbbf24);
+        }
+
+        .card-peace .card-progress-fill {
+            background: linear-gradient(90deg, var(--peace-color), #60a5fa);
+        }
+
+        /* Кнопка настроек */
+        .settings-button {
+            background: var(--button-color);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: auto;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .settings-button:hover {
+            background: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .settings-button:active {
+            transform: translateY(0);
+        }
+
+        .settings-button i {
+            font-size: 1.3rem;
+        }
+
+        /* Модальное окно настроек - компактное */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 0;
+            width: 100%;
+            max-width: 450px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+            padding: 8px;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        /* Настройки - компактные в одну строку */
+        .settings-list {
+            flex: 1;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .setting-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .setting-title .card-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+        }
+
+        /* Строка настроек */
+        .setting-row {
+            display: grid;
+            grid-template-columns: 1fr 80px 40px;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .setting-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .setting-input:focus {
+            outline: none;
+            border-color: var(--button-color);
+        }
+
+        .setting-input.compact {
+            padding: 10px 12px;
+            font-size: 0.9rem;
+        }
+
+        .setting-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            opacity: 0.7;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        /* Кнопка сброса - только иконка */
+        .reset-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 2px solid rgba(239, 68, 68, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .reset-button:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+            transform: scale(1.1);
+        }
+
+        .reset-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Анимация при сбросе */
+        @keyframes resetPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); background-color: rgba(239, 68, 68, 0.3); }
+            100% { transform: scale(1); }
+        }
+
+        .reset-button.active {
+            animation: var(--reset-animation);
+        }
+
+        /* Подсветка поля при сбросе */
+        .setting-input.reset-highlight {
+            animation: fieldHighlight 1s ease;
+            border-color: #ef4444;
+        }
+
+        @keyframes fieldHighlight {
+            0% { border-color: #ef4444; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+            50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+            100% { border-color: var(--border-color); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 16px;
+        }
+
+        .modal-footer button {
+            flex: 1;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .cancel-button {
+            background: var(--progress-bg);
+            color: var(--text-color);
+        }
+
+        .cancel-button:hover {
+            background: var(--border-color);
+        }
+
+        .save-button {
+            background: var(--button-color);
+            color: white;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .save-button:hover {
+            background: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .save-button:active {
+            transform: translateY(0);
+        }
+
+        /* Подтверждение сохранения */
+        .confirm-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .confirm-overlay.active {
+            display: flex;
+        }
+
+        .confirm-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .confirm-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .confirm-message {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .confirm-buttons button {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .confirm-no {
+            background: var(--progress-bg);
+            color: var(--text-color);
+        }
+
+        .confirm-no:hover {
+            background: var(--border-color);
+        }
+
+        .confirm-yes {
+            background: var(--button-color);
+            color: white;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .confirm-yes:hover {
+            background: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Анимации */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .total-card {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .progress-card {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .progress-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .progress-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .progress-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        /* Адаптация */
+        @media (max-height: 700px) {
+            .app-container {
+                padding: 16px 14px;
+                gap: 16px;
+            }
+
+            .total-card {
+                padding: 20px;
+            }
+
+            .total-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.5rem;
+            }
+
+            .total-percent {
+                font-size: 2rem;
+            }
+
+            .progress-card {
+                padding: 16px;
+                gap: 10px;
+            }
+
+            .card-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .time-days, .time-clock {
+                font-size: 1.1rem;
+            }
+
+            .settings-button {
+                padding: 16px;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .app-container {
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .total-card {
+                padding: 16px;
+            }
+
+            .total-icon {
+                width: 44px;
+                height: 44px;
+            }
+
+            .progress-card {
+                padding: 14px;
+                gap: 8px;
+            }
+
+            .card-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .time-days, .time-clock {
+                font-size: 1rem;
+            }
+
+            .settings-button {
+                padding: 14px;
+            }
+        }
+
+        /* Для очень маленьких экранов */
+        @media (max-width: 350px) {
+            .setting-row {
+                grid-template-columns: 1fr 70px 40px;
+                gap: 8px;
+            }
+
+            .setting-input {
+                padding: 10px;
+                font-size: 0.85rem;
+            }
+
+            .modal-header {
+                padding: 16px 20px 12px;
+            }
+
+            .settings-list {
+                padding: 16px 20px;
+                gap: 16px;
+            }
+
+            .modal-footer {
+                padding: 16px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Общий прогресс -->
+        <div class="total-card">
+            <div class="total-header">
+                <div class="total-icon">
+                    <i class="fas fa-chart-line"></i>
                 </div>
-                <div style=" display:flex;gap:6px">
-                    <button class="iconbtn" id="openHistory" aria-label="История">
-                        <i class="fa-solid fa-clock-rotate-left icon" aria-hidden="true"></i>
-                    </button>
-                    <button class="iconbtn" id="openSettings" aria-label="Настройки">
-                        <i class="fa-solid fa-gear icon" aria-hidden="true"></i>
-                    </button>
+                <div class="total-info">
+                    <div class="total-title">Общий прогресс</div>
+                    <div class="total-percent" id="total-percent">0%</div>
                 </div>
-            </header>
-
-            <main class="card">
-                <section class="timer">
-                    <div class="timer__value" id="timer">00 дн • 00:00:00</div>
-                    <div class="timer__since muted" id="sinceLabel">с …</div>
-                    <div class="badges">
-                        <span class="badge" id="rateBadge">X TON / сутки</span>
-                        <span class="badge" id="spendMinBadge">MIN X TON</span>
-                        <span class="pill pill--weak" id="weaknessPill" style="display:none;">
-                            <i class="fa-solid fa-flag icon" aria-hidden="true"></i>
-                            <span>Слабость</span>
-                            <span class="mono" id="weaknessAgo">—</span>
-                        </span>
-                        <span class="badge" id="testBadge" style=" display:none;">Тест: +24ч</span>
-                        <span class="pill" id="cravingPill" style=" display:none;"><i class="fa-solid fa-bolt"></i> шторм активен</span>
-                    </div>
-                </section>
-
-                <div class="divider"></div>
-
-                <section class="artifact">
-                    <div class="orb" id="orb"><div class="orb__big" id="orbPct">0.00%</div></div>
-                    <div class="orb__label">цель: 30 дн</div>
-                </section>
-
-                <div class="divider"></div>
-
-                <section class="balance">
-                    <div class="balance__row">
-                        <span>Баланс TON</span>
-                        <span class="balance__value mono" id="balanceVal">0</span>
-                    </div>
-                    <div class="progress" aria-label="Прогресс до следующего TON">
-                        <i id="progressBar" style=" width:0%"></i>
-                    </div>
-                    <div class="balance__row muted">
-                        <span>Следующий TON через</span>
-                        <span class="mono" id="eta">—</span>
-                    </div>
-                </section>
-
-                <div class="divider"></div>
-
-                <section class="actions">
-                    <button class="btn" id="spendBtn">
-                        <i class="fa ton icon" style="margin-bottom:8px;vertical-align:middle" aria-hidden="true"></i>
-                        Списать TON
-                    </button>
-
-                    <div class="row">
-                        <button class="btn btn--warning" id="cravingBtn">
-                            <i class="fa-solid fa-bolt icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Шторм
-                        </button>
-                        <button class="btn btn--ok" id="boostBtn">
-                            <i class="fa-solid fa-angles-up icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Бусты
-                        </button>
-                    </div>
-                </section>
-
-                <div class="divider" style="display: none"></div>
-
-                <section class="quote" style="display: none">
-                    <div class="quote__text" id="quoteText">«Дисциплина — это свобода.»</div>
-                    <div class="quote__author" id="quoteAuthor">— Джоко Уиллинк</div>
-                </section>
-            </main>
-
-            <footer>Без истерик. Просто делать своё.</footer>
+            </div>
+            <div class="total-progress">
+                <div class="total-progress-fill" id="total-progress" style="width: 0%"></div>
+            </div>
         </div>
 
-        <!-- Настройки -->
-        <div class="overlay" id="sheetSettings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-            <div class="sheet" role="document">
-                <h3 id="settingsTitle">Настройки</h3>
-                <div class="field">
-                    <label for="startAt">Дата и время начала отсчёта (местное)</label>
-                    <input type="datetime-local" id="startAt">
-                    <small class="muted">После изменения нажмите Сохранить</small>
+        <!-- Прогрессы -->
+        <div class="progress-cards">
+            <!-- Путь -->
+            <div class="progress-card card-path" id="path-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-road"></i>
+                    </div>
+                    <div class="card-title">Путь</div>
+                    <div class="card-percent" id="path-percent">0%</div>
                 </div>
-                <label class="check" style=" display:none">
-                    <input type="checkbox" id="testMode">
-                    <span>Режим тестирования (к текущему времени +24ч)</span>
-                </label>
-                <div class="divider"></div>
-                <button class="btn btn--ghost" id="softReset">Сбросить данные</button>
-                <div class="row">
-                    <button class="btn btn--ghost" id="closeSettings">Отмена</button>
-                    <button class="btn" id="saveSettings">Сохранить</button>
+                <div class="card-time">
+                    <span class="time-days" id="path-days">0 дней</span>
+                    <span class="time-separator">•</span>
+                    <span class="time-clock" id="path-time">00:00:00</span>
+                </div>
+                <div class="card-progress">
+                    <div class="card-progress-fill" id="path-progress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Контроль -->
+            <div class="progress-card card-control" id="control-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <div class="card-title">Контроль</div>
+                    <div class="card-percent" id="control-percent">0%</div>
+                </div>
+                <div class="card-time">
+                    <span class="time-days" id="control-days">0 дней</span>
+                    <span class="time-separator">•</span>
+                    <span class="time-clock" id="control-time">00:00:00</span>
+                </div>
+                <div class="card-progress">
+                    <div class="card-progress-fill" id="control-progress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Равновесие -->
+            <div class="progress-card card-peace" id="peace-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-peace"></i>
+                    </div>
+                    <div class="card-title">Равновесие</div>
+                    <div class="card-percent" id="peace-percent">0%</div>
+                </div>
+                <div class="card-time">
+                    <span class="time-days" id="peace-days">0 дней</span>
+                    <span class="time-separator">•</span>
+                    <span class="time-clock" id="peace-time">00:00:00</span>
+                </div>
+                <div class="card-progress">
+                    <div class="card-progress-fill" id="peace-progress" style="width: 0%"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Ввод списания -->
-        <div class="overlay" id="sheetSpend" role="dialog" aria-modal="true" aria-labelledby="spendTitle">
-            <div class="sheet" role="document">
-                <h3 id="spendTitle">Списать TON</h3>
-                <div class="field">
-                    <label>Количество</label>
-                    <div class="qty" role="group" aria-label="Количество TON">
-                        <button class="qty__btn" id="qtyMinus" aria-label="Минус"><i class="fa-solid fa-minus"></i></button>
-                        <div class="qty__val mono" id="qtyVal">1</div>
-                        <button class="qty__btn" id="qtyPlus" aria-label="Плюс"><i class="fa-solid fa-plus"></i></button>
+        <!-- Кнопка настроек -->
+        <button class="settings-button" id="settingsButton">
+            <i class="fas fa-cog"></i>
+            Настройки
+        </button>
+    </div>
+
+    <!-- Модальное окно настроек -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Настройки прогресса</h2>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="settings-list">
+                <!-- Настройки для "Путь" -->
+                <div class="setting-group" id="path-settings">
+                    <div class="setting-title">
+                        <div class="card-icon">
+                            <i class="fas fa-road"></i>
+                        </div>
+                        Путь
                     </div>
-                    <div class="linkrow">
-                        <button type="button" class="linklike" id="qtyMaxBtn">Списать всё</button>
+
+                    <div class="setting-row">
+                        <div>
+                            <div class="setting-label">Дата</div>
+                            <input type="datetime-local" class="setting-input compact" id="path-start-date">
+                        </div>
+                        <div>
+                            <div class="setting-label">Цель (дн.)</div>
+                            <input type="number" class="setting-input compact" id="path-goal-days" min="1" max="365" value="30">
+                        </div>
+                        <button class="reset-button" id="reset-path" title="Сбросить на текущее время">
+                            <i class="fas fa-redo"></i>
+                        </button>
                     </div>
                 </div>
-                <div class="row">
-                    <button class="btn btn--ghost" id="cancelSpend">Отмена</button>
-                    <button class="btn" id="goConfirm">Списать</button>
+
+                <!-- Настройки для "Контроль" -->
+                <div class="setting-group" id="control-settings">
+                    <div class="setting-title">
+                        <div class="card-icon">
+                            <i class="fas fa-sliders-h"></i>
+                        </div>
+                        Контроль
+                    </div>
+
+                    <div class="setting-row">
+                        <div>
+                            <div class="setting-label">Дата</div>
+                            <input type="datetime-local" class="setting-input compact" id="control-start-date">
+                        </div>
+                        <div>
+                            <div class="setting-label">Цель (дн.)</div>
+                            <input type="number" class="setting-input compact" id="control-goal-days" min="1" max="365" value="30">
+                        </div>
+                        <button class="reset-button" id="reset-control" title="Сбросить на текущее время">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Настройки для "Равновесие" -->
+                <div class="setting-group" id="peace-settings">
+                    <div class="setting-title">
+                        <div class="card-icon">
+                            <i class="fas fa-peace"></i>
+                        </div>
+                        Равновесие
+                    </div>
+
+                    <div class="setting-row">
+                        <div>
+                            <div class="setting-label">Дата</div>
+                            <input type="datetime-local" class="setting-input compact" id="peace-start-date">
+                        </div>
+                        <div>
+                            <div class="setting-label">Цель (дн.)</div>
+                            <input type="number" class="setting-input compact" id="peace-goal-days" min="1" max="365" value="30">
+                        </div>
+                        <button class="reset-button" id="reset-peace" title="Сбросить на текущее время">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Подтверждение списания -->
-        <div class="overlay" id="sheetConfirm" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-            <div class="sheet" role="document">
-                <h3 id="confirmTitle">Подтвердить списание?</h3>
-                <p style="margin-bottom: 0;">Вы уверены, что хотите списать <strong class="mono" id="confirmQty">0</strong> TON?</p>
-                <p class="confirm__rate" id="confirmRateRow">
-                    <span class="spinner" id="confirmRateSpinner"></span>
-                    <span id="confirmRateText">Получение курса…</span>
-                </p>
-                <div class="row">
-                    <button class="btn btn--ghost" id="backFromConfirm">Назад</button>
-                    <button class="btn btn--ok" id="confirmYes">Подтвердить</button>
-                </div>
+            <div class="modal-footer">
+                <button class="cancel-button" id="cancelSettings">Отмена</button>
+                <button class="save-button" id="saveSettings">Сохранить</button>
             </div>
         </div>
+    </div>
 
-        <!-- Итог (списание/бонус) -->
-        <div class="overlay" id="sheetDone" role="dialog" aria-modal="true" aria-labelledby="doneTitle">
-            <canvas id="confetti" style="position:absolute; inset:0; pointer-events:none; z-index:50; display:none;"></canvas>
-            <div class="sheet" role="document">
-                <div class="done__row">
-                    <div>
-                        <div class="done__dt">Дата/время: <span class="mono" id="doneDt">—</span></div>
-                        <div class="done__award">Сумма: <strong class="mono" id="doneQty">0</strong></div>
-                    </div>
-                    <div class="done__chip" id="doneChip"><i class="fa-solid fa-check"></i> Готово</div>
-                </div>
-                <button class="btn" id="closeDone">Ок</button>
+    <!-- Окно подтверждения -->
+    <div class="confirm-overlay" id="confirmModal">
+        <div class="confirm-content">
+            <h2 class="confirm-title">Подтверждение</h2>
+            <p class="confirm-message">Сохранить новые настройки? Прогресс будет пересчитан.</p>
+            <div class="confirm-buttons">
+                <button class="confirm-no" id="confirmNo">Отмена</button>
+                <button class="confirm-yes" id="confirmYes">Сохранить</button>
             </div>
         </div>
+    </div>
 
-        <!-- История -->
-        <div class="overlay" id="sheetHistory" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
-            <div class="sheet" role="document">
-                <h3 id="historyTitle">История</h3>
-                <div class="history" id="historyList"></div>
-                <div class="row" style=" grid-template-columns:1fr;">
-                    <button class="btn" id="closeHistory">Закрыть</button>
-                </div>
-            </div>
-        </div>
+    <script>
+        // Данные прогресс-баров
+        const progressData = {
+            path: {
+                name: 'Путь',
+                startDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 дней назад
+                goalDays: 30,
+                color: '#10b981',
+                elementId: 'path'
+            },
+            control: {
+                name: 'Контроль',
+                startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 дней назад
+                goalDays: 30,
+                color: '#f59e0b',
+                elementId: 'control'
+            },
+            peace: {
+                name: 'Равновесие',
+                startDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 дня назад
+                goalDays: 30,
+                color: '#3b82f6',
+                elementId: 'peace'
+            }
+        };
 
-        <!-- Шторм -->
-        <div class="overlay" id="sheetCraving" role="dialog" aria-modal="true" aria-labelledby="cravingTitle">
-            <div class="sheet" role="document">
-                <h3 id="cravingTitle">Шторм</h3>
+        // Временные настройки для модального окна
+        let tempSettings = JSON.parse(JSON.stringify(progressData));
 
-                <div class="status" id="crvStatus">
-                    <i class="fa-solid fa-cloud-bolt"></i>
-                    <div>
-                        <div class="muted">Статус</div>
-                        <div id="crvStatusLine">нет активного шторма</div>
-                    </div>
-                </div>
+        // Функция форматирования времени
+        function formatTime(totalSeconds) {
+            const days = Math.floor(totalSeconds / (24 * 60 * 60));
+            const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = Math.floor(totalSeconds % 60);
 
-                <div class="field">
-                    <label>Уровень</label>
-                    <div class="seg">
-                        <button class="btn" data-level="m">Средняя</button>
-                        <button class="btn" data-level="s">Сильная</button>
-                        <button class="btn" data-level="x">Экстра</button>
-                    </div>
-                    <small class="muted">Бонус за завершение: <span id="crvBonusPreview" class="mono">+1</span></small>
-                </div>
+            return {
+                days: days,
+                daysText: `${days} ${getDayWord(days)}`,
+                time: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+            };
+        }
 
-                <div id="crvTimes" class="field" style=" display:none;">
-                    <div class="muted">Начало: <span class="mono" id="crvStartDt">—</span></div>
-                    <div>Длится: <strong class="mono" id="crvElapsed">—</strong></div>
-                </div>
+        // Правильное склонение слова "день"
+        function getDayWord(days) {
+            const lastDigit = days % 10;
+            const lastTwoDigits = days % 100;
 
-                <div class="divider"></div>
+            if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+                return 'дней';
+            }
 
-                <div class="field">
-                    <button class="btn btn--ghost-danger" id="weaknessMarkBtn">
-                        <i class="fa-solid fa-flag icon" style="margin-right:8px;vertical-align:middle"></i>
-                        Отметить слабость
-                    </button>
-                    <small class="muted">
-                        Фиксирует момент срыва, чтобы видеть, сколько времени ты держишься.
-                    </small>
-                </div>
+            if (lastDigit === 1) {
+                return 'день';
+            }
 
-                <div class="divider"></div>
+            if (lastDigit >= 2 && lastDigit <= 4) {
+                return 'дня';
+            }
 
-                <div id="crvActionsIdle" class="row">
-                    <button class="btn btn--ghost" id="closeCraving">Закрыть</button>
-                    <button class="btn btn--warning" id="cravingStart">Начать</button>
-                </div>
+            return 'дней';
+        }
 
-                <div id="crvActionsActive" class="row" style=" display:none;">
-                    <button class="btn btn--ghost" id="cravingCancel">Сбросить</button>
-                    <button class="btn btn--ok" id="cravingFinish">Завершить</button>
-                </div>
-            </div>
-        </div>
+        // Расчет прогресса
+        function calculateProgress(data) {
+            const now = new Date();
+            const elapsed = (now - data.startDate) / 1000; // в секундах
+            const goal = data.goalDays * 24 * 60 * 60; // цель в секундах
 
-        <!-- Кастомное подтверждение завершения шторма -->
-        <div class="overlay" id="sheetCravingConfirm" role="dialog" aria-modal="true" aria-labelledby="crvConfirmTitle">
-            <div class="sheet" role="document">
-                <h3 id="crvConfirmTitle">Завершить шторм?</h3>
-                <p class="confirm__txt">
-                    Уровень: <strong id="crvConfirmLevel">—</strong><br>
-                    Бонус: <strong class="mono" id="crvConfirmBonus">+0</strong>
-                </p>
-                <div class="confirm__row">
-                    <button class="btn btn--ghost" id="crvConfirmBack">Назад</button>
-                    <button class="btn btn--ok" id="crvConfirmYes">Подтвердить</button>
-                </div>
-            </div>
-        </div>
+            let percent = Math.min(100, (elapsed / goal) * 100);
 
-        <!-- Подтверждение слабости -->
-        <div class="overlay" id="sheetWeaknessConfirm" role="dialog" aria-modal="true" aria-labelledby="weakConfirmTitle">
-            <div class="sheet" role="document">
-                <h3 id="weakConfirmTitle">Отметить слабость?</h3>
-                <p class="confirm__txt">
-                    Вы уверены, что хотите отметить слабость?
-                </p>
+            return {
+                percent: percent,
+                elapsed: elapsed,
+                goal: goal
+            };
+        }
 
-                <div class="field">
-                    <label for="weakDt">Когда произошла слабость?</label>
-                    <input type="datetime-local" id="weakDt">
-                    <small class="muted">
-                        По умолчанию — текущее время. Можно сдвинуть, если слабость была раньше.
-                    </small>
-                </div>
+        // Обновление отображения прогресса
+        function updateProgressDisplay() {
+            let totalElapsedDays = 0;
+            let totalGoalDays = 0;
 
-                <div class="confirm__row">
-                    <button class="btn btn--ghost" id="weakConfirmBack">Отмена</button>
-                    <button class="btn btn--danger" id="weakConfirmYes">Отметить</button>
-                </div>
-            </div>
-        </div>
+            Object.keys(progressData).forEach(key => {
+                const data = progressData[key];
+                const progress = calculateProgress(data);
+                const time = formatTime(progress.elapsed);
 
-        <!-- Подтверждение тренировки -->
-        <div class="overlay" id="sheetWorkoutConfirm" role="dialog" aria-modal="true" aria-labelledby="wkConfirmTitle">
-            <div class="sheet" role="document">
-                <h3 id="wkConfirmTitle">Добавить тренировку?</h3>
-                <p class="confirm__txt">
-                    Бонус за тренировку: <strong class="mono">+3</strong> TON.
-                </p>
-                <div class="field">
-                    <label>Рекорды на тренировке</label>
-                    <div class="qty" role="group" aria-label="Количество рекордов">
-                        <button class="qty__btn" id="wkRecMinus" aria-label="Минус">
-                            <i class="fa-solid fa-minus"></i>
-                        </button>
-                        <div class="qty__val mono" id="wkRecVal">0</div>
-                        <button class="qty__btn" id="wkRecPlus" aria-label="Плюс">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
-                    </div>
-                    <small class="muted">+1 TON за каждые 2 рекорда</small>
-                </div>
-                <div class="field">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <button id="wkFastBtn" class="toggle-btn">Меньше 2 часов</button>
-                    </div>
-                    <small class="muted">Дополнительно +3 TON</small>
-                </div>
-                <div class="confirm__row">
-                    <button class="btn btn--ghost" id="wkConfirmBack">Отмена</button>
-                    <button class="btn btn--ok" id="wkConfirmYes">Подтвердить</button>
-                </div>
-            </div>
-        </div>
+                // Обновление карточек
+                document.getElementById(`${data.elementId}-percent`).textContent = `${Math.round(progress.percent)}%`;
+                document.getElementById(`${data.elementId}-days`).textContent = time.daysText;
+                document.getElementById(`${data.elementId}-time`).textContent = time.time;
+                document.getElementById(`${data.elementId}-progress`).style.width = `${progress.percent}%`;
 
-        <!-- Подтверждение буста -->
-        <div class="overlay" id="sheetBoostConfirm" role="dialog" aria-modal="true" aria-labelledby="boostConfirmTitle">
-            <div class="sheet" role="document">
-                <h3 id="boostConfirmTitle">Подтвердить бонус?</h3>
-                <p class="confirm__txt" id="boostConfirmText">
-                    <!-- сюда JS подставит текст -->
-                </p>
-                <div class="confirm__row">
-                    <button class="btn btn--ghost" id="boostConfirmBack">Отмена</button>
-                    <button class="btn btn--ok" id="boostConfirmYes">Подтвердить</button>
-                </div>
-            </div>
-        </div>
+                // Для общего прогресса считаем в днях
+                const elapsedDays = progress.elapsed / (24 * 60 * 60);
+                totalElapsedDays += elapsedDays;
+                totalGoalDays += data.goalDays;
+            });
 
-        <!-- Boost -->
-        <div class="overlay" id="sheetBoost" role="dialog" aria-modal="true" aria-labelledby="boostTitle">
-            <div class="sheet" role="document">
-                <h3 id="boostTitle">Бусты</h3>
+            let totalPercent = 0;
+            if (totalGoalDays > 0) {
+                totalPercent = Math.min(100, (totalElapsedDays / totalGoalDays) * 100);
+            }
 
-                <div class="field">
-                    <label>Выбери бонус</label>
+            document.getElementById('total-percent').textContent = `${Math.round(totalPercent)}%`;
+            document.getElementById('total-progress').style.width = `${totalPercent}%`;
+        }
 
-                    <div class="row">
-                        <button class="btn btn--ok" id="boostWorkout">
-                            <i class="fa-solid fa-dumbbell icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Спорт
-                        </button>
-                        <button class="btn btn--ok" id="boostRace">
-                            <i class="fa-solid fa-plane-departure icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Рейс
-                        </button>
-                    </div>
+        // Обновление каждую секунду
+        function updateProgress() {
+            updateProgressDisplay();
+        }
 
-                    <div class="row">
-                        <button class="btn" id="boostWake">
-                            <i class="fa-solid fa-sun icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Подъем
-                        </button>
-                        <button class="btn" id="boostSleep">
-                            <i class="fa-solid fa-ban icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Без сахара
-                        </button>
-                    </div>
+        // Анимация при сбросе
+        function animateReset(buttonId, inputId) {
+            const button = document.getElementById(buttonId);
+            const input = document.getElementById(inputId);
 
-                    <div class="row">
-                        <button class="btn" id="boostWalk">
-                            <i class="fa-solid fa-person-walking icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Прогулка
-                        </button>
-                        <button class="btn" id="boostClean">
-                            <i class="fa-solid fa-broom icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Уборка
-                        </button>
-                    </div>
+            // Анимация кнопки
+            button.classList.add('active');
+            setTimeout(() => {
+                button.classList.remove('active');
+            }, 300);
 
-                    <div class="row">
-                        <button class="btn" id="boostReading">
-                            <i class="fa-solid fa-book-open icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Доки
-                        </button>
-                        <button class="btn" id="boostCoding">
-                            <i class="fa-solid fa-code icon" style="margin-right:8px;vertical-align:middle"></i>
-                            Кодинг
-                        </button>
-                    </div>
-                </div>
+            // Подсветка поля
+            input.classList.add('reset-highlight');
+            setTimeout(() => {
+                input.classList.remove('reset-highlight');
+            }, 1000);
+        }
 
-                <button class="btn btn--ghost" id="closeBoost">Закрыть</button>
-            </div>
-        </div>
-
-        <!-- Чтение документов -->
-        <div class="overlay" id="sheetReading" role="dialog" aria-modal="true" aria-labelledby="readingTitle">
-            <div class="sheet" role="document">
-                <h3 id="readingTitle">Чтение документов</h3>
-
-                <div class="field">
-                    <label>Количество страниц</label>
-                    <div class="qty" role="group" aria-label="Количество страниц">
-                        <button class="qty__btn" id="readMinus" aria-label="Минус">
-                            <i class="fa-solid fa-minus"></i>
-                        </button>
-                        <div class="qty__val mono" id="readPagesVal">1</div>
-                        <button class="qty__btn" id="readPlus" aria-label="Плюс">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
-                    </div>
-                    <small class="muted">Минимум 1 страница.</small>
-                </div>
-
-                <div class="field">
-                    <label>Язык</label>
-                    <div class="seg">
-                        <button class="btn" id="readLangRu" data-lang="ru">RU</button>
-                        <button class="btn" id="readLangEn" data-lang="en">EN</button>
-                    </div>
-                    <small class="muted">EN: +1 TON за 2 стр, RU: +1 TON за 3 стр.</small>
-                </div>
-
-                <div class="row">
-                    <button class="btn btn--ghost" id="readCancel">Отмена</button>
-                    <button class="btn btn--ok" id="readConfirm">Начислить</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Кодинг -->
-        <div class="overlay" id="sheetCoding" role="dialog" aria-modal="true" aria-labelledby="codingTitle">
-            <div class="sheet" role="document">
-                <h3 id="codingTitle">Кодинг</h3>
-
-                <div class="field">
-                    <label>Время кодинга</label>
-                    <div class="qty" role="group" aria-label="Время кодинга">
-                        <button class="qty__btn" id="codingMinus" aria-label="Минус">
-                            <i class="fa-solid fa-minus"></i>
-                        </button>
-                        <div class="qty__val mono" id="codingVal">0:30</div>
-                        <button class="qty__btn" id="codingPlus" aria-label="Плюс">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
-                    </div>
-                    <small class="muted">От 0:30 до 5:00. 1 TON за каждые 30 минут.</small>
-                </div>
-
-                <div class="row">
-                    <button class="btn btn--ghost" id="codingCancel">Отмена</button>
-                    <button class="btn" id="codingConfirm">Начислить</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Рейс -->
-        <div class="overlay" id="sheetRace" role="dialog" aria-modal="true" aria-labelledby="raceTitle">
-            <div class="sheet" role="document">
-                <h3 id="raceTitle">Рейс</h3>
-
-                <div class="field">
-                    <label>Часы рейса</label>
-                    <div class="qty" role="group" aria-label="Часы рейса">
-                        <button class="qty__btn" id="raceMinus" aria-label="Минус">
-                            <i class="fa-solid fa-minus"></i>
-                        </button>
-                        <div class="qty__val mono" id="raceHoursVal">1</div>
-                        <button class="qty__btn" id="racePlus" aria-label="Плюс">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
-                    </div>
-                    <small class="muted">От 1 до 12 часов. 1 час = 1 TON.</small>
-                </div>
-
-                <div class="row">
-                    <button class="btn btn--ghost" id="raceCancel">Отмена</button>
-                    <button class="btn btn--ok" id="raceConfirm">Начислить</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Подтверждение действий в настройках -->
-        <div class="overlay" id="sheetSettingsConfirm">
-            <div class="sheet">
-                <h3 id="settingsConfirmTitle">Подтверждение</h3>
-                <p id="settingsConfirmText" class="confirm__txt">Вы уверены?</p>
-                <div class="confirm__row">
-                    <button class="btn btn--ghost" id="settingsConfirmBack">Отмена</button>
-                    <button class="btn btn--ok" id="settingsConfirmYes">Подтвердить</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Конфетти -->
-        <div class="toast" id="toast">Сохранено</div>
-
-        <script src="script.js"></script>
-
-        <script>
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/sw.js');
+        // Инициализация
+        function initApp() {
+            // Загрузка сохраненных настроек из localStorage
+            const savedSettings = localStorage.getItem('progressSettings');
+            if (savedSettings) {
+                const parsed = JSON.parse(savedSettings);
+                Object.keys(parsed).forEach(key => {
+                    if (progressData[key]) {
+                        progressData[key].startDate = new Date(parsed[key].startDate);
+                        progressData[key].goalDays = parsed[key].goalDays;
+                    }
                 });
             }
-        </script>
-    </body>
+
+            // Запуск обновления
+            setInterval(updateProgress, 1000);
+            updateProgress();
+
+            // Настройка модального окна
+            setupModal();
+        }
+
+        // Настройка модального окна
+        function setupModal() {
+            const modal = document.getElementById('settingsModal');
+            const confirmModal = document.getElementById('confirmModal');
+            const openBtn = document.getElementById('settingsButton');
+            const closeBtn = document.getElementById('closeModal');
+            const cancelBtn = document.getElementById('cancelSettings');
+            const saveBtn = document.getElementById('saveSettings');
+            const confirmNo = document.getElementById('confirmNo');
+            const confirmYes = document.getElementById('confirmYes');
+
+            // Открытие модального окна
+            openBtn.addEventListener('click', () => {
+                // Сохраняем текущие настройки во временные
+                Object.keys(progressData).forEach(key => {
+                    tempSettings[key] = {
+                        ...progressData[key],
+                        startDate: new Date(progressData[key].startDate)
+                    };
+                });
+
+                // Заполняем поля формы
+                updateSettingsForm();
+                modal.classList.add('active');
+            });
+
+            // Закрытие модального окна
+            closeBtn.addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+
+            // Сброс к текущему времени с анимацией
+            document.getElementById('reset-path').addEventListener('click', () => {
+                tempSettings.path.startDate = new Date();
+                updateSettingsForm();
+                animateReset('reset-path', 'path-start-date');
+            });
+
+            document.getElementById('reset-control').addEventListener('click', () => {
+                tempSettings.control.startDate = new Date();
+                updateSettingsForm();
+                animateReset('reset-control', 'control-start-date');
+            });
+
+            document.getElementById('reset-peace').addEventListener('click', () => {
+                tempSettings.peace.startDate = new Date();
+                updateSettingsForm();
+                animateReset('reset-peace', 'peace-start-date');
+            });
+
+            // Сохранение настроек
+            saveBtn.addEventListener('click', () => {
+                // Сохраняем данные из формы во временные настройки
+                saveFormToTemp();
+
+                // Показываем подтверждение
+                confirmModal.classList.add('active');
+            });
+
+            // Подтверждение сохранения
+            confirmYes.addEventListener('click', () => {
+                // Копируем временные настройки в основные
+                Object.keys(tempSettings).forEach(key => {
+                    progressData[key].startDate = new Date(tempSettings[key].startDate);
+                    progressData[key].goalDays = parseInt(tempSettings[key].goalDays);
+                });
+
+                // Сохраняем в localStorage
+                const settingsToSave = {};
+                Object.keys(progressData).forEach(key => {
+                    settingsToSave[key] = {
+                        startDate: progressData[key].startDate.toISOString(),
+                        goalDays: progressData[key].goalDays
+                    };
+                });
+                localStorage.setItem('progressSettings', JSON.stringify(settingsToSave));
+
+                // Обновляем отображение
+                updateProgressDisplay();
+
+                // Закрываем окна
+                confirmModal.classList.remove('active');
+                modal.classList.remove('active');
+            });
+
+            confirmNo.addEventListener('click', () => {
+                confirmModal.classList.remove('active');
+            });
+
+            // Обновление формы настроек
+            function updateSettingsForm() {
+                // Форматирование даты для input[type="datetime-local"]
+                function formatDateForInput(date) {
+                    const d = new Date(date);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const hours = String(d.getHours()).padStart(2, '0');
+                    const minutes = String(d.getMinutes()).padStart(2, '0');
+
+                    return `${year}-${month}-${day}T${hours}:${minutes}`;
+                }
+
+                // Заполняем поля
+                document.getElementById('path-start-date').value = formatDateForInput(tempSettings.path.startDate);
+                document.getElementById('path-goal-days').value = tempSettings.path.goalDays;
+
+                document.getElementById('control-start-date').value = formatDateForInput(tempSettings.control.startDate);
+                document.getElementById('control-goal-days').value = tempSettings.control.goalDays;
+
+                document.getElementById('peace-start-date').value = formatDateForInput(tempSettings.peace.startDate);
+                document.getElementById('peace-goal-days').value = tempSettings.peace.goalDays;
+            }
+
+            // Сохранение данных из формы во временные настройки
+            function saveFormToTemp() {
+                tempSettings.path.startDate = new Date(document.getElementById('path-start-date').value);
+                tempSettings.path.goalDays = parseInt(document.getElementById('path-goal-days').value);
+
+                tempSettings.control.startDate = new Date(document.getElementById('control-start-date').value);
+                tempSettings.control.goalDays = parseInt(document.getElementById('control-goal-days').value);
+
+                tempSettings.peace.startDate = new Date(document.getElementById('peace-start-date').value);
+                tempSettings.peace.goalDays = parseInt(document.getElementById('peace-goal-days').value);
+            }
+
+            // Закрытие по клику вне окна
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+
+            confirmModal.addEventListener('click', (e) => {
+                if (e.target === confirmModal) {
+                    confirmModal.classList.remove('active');
+                }
+            });
+        }
+
+        // Запуск приложения
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
+</body>
 </html>
