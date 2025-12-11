@@ -80,7 +80,6 @@
 
         .app-container {
             max-width: 100%;
-            min-height: 100vh;
             padding: 20px 16px;
             display: flex;
             flex-direction: column;
@@ -250,37 +249,48 @@
         }
 
         .card-percent {
-            font-size: 0.9rem;
-            opacity: 0.7;
-            font-weight: 600;
-            min-width: 40px;
+            font-size: 1rem;
+            font-weight: 700;
+            min-width: 64px;
             text-align: right;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.18);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            line-height: 1;
         }
 
         .card-path .card-percent {
             color: var(--path-color);
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.35);
         }
 
         .card-control .card-percent {
             color: var(--control-color);
+            background: rgba(245, 158, 11, 0.12);
+            border-color: rgba(245, 158, 11, 0.35);
         }
 
         .card-peace .card-percent {
             color: var(--peace-color);
+            background: rgba(59, 130, 246, 0.12);
+            border-color: rgba(59, 130, 246, 0.35);
         }
 
-        /* Время в одну строку */
+        /* Время в одну строку – более аккуратный вид */
         .card-time {
             display: flex;
-            align-items: baseline;
-            gap: 8px;
-            font-family: 'Courier New', monospace;
+            align-items: center;
+            gap: 10px;
+            font-family: inherit;
         }
 
         .time-days {
-            font-size: 1.3rem;
-            font-weight: 700;
+            font-size: 1.15rem;
+            font-weight: 600;
             white-space: nowrap;
+            letter-spacing: 0.02em;
         }
 
         .time-separator {
@@ -289,24 +299,29 @@
         }
 
         .time-clock {
-            font-size: 1.3rem;
-            font-weight: 700;
-            letter-spacing: 1px;
+            font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.18);
+            border: 1px solid rgba(148, 163, 184, 0.35);
         }
 
-        .card-path .time-days,
         .card-path .time-clock {
-            color: var(--path-color);
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.35);
         }
 
-        .card-control .time-days,
         .card-control .time-clock {
-            color: var(--control-color);
+            background: rgba(245, 158, 11, 0.12);
+            border-color: rgba(245, 158, 11, 0.35);
         }
 
-        .card-peace .time-days,
         .card-peace .time-clock {
-            color: var(--peace-color);
+            background: rgba(59, 130, 246, 0.12);
+            border-color: rgba(59, 130, 246, 0.35);
         }
 
         .card-progress {
@@ -457,12 +472,25 @@
             font-size: 1rem;
         }
 
-        /* Строка настроек */
+        /* Строка настроек — flex, чтобы iOS не сдвигал поля */
         .setting-row {
-            display: grid;
-            grid-template-columns: 1fr 80px 40px;
+            display: flex;
+            align-items: flex-end;
             gap: 12px;
-            align-items: center;
+        }
+
+        .setting-row > div {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        .setting-row .setting-input {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .reset-button {
+            flex: 0 0 40px;
         }
 
         .setting-input {
@@ -475,6 +503,13 @@
             font-size: 0.95rem;
             font-family: inherit;
             transition: all 0.3s ease;
+        }
+
+        input[type="datetime-local"],
+        input[type="number"] {
+            max-width: 100%;
+            box-sizing: border-box;
+            font-size: 0.9rem;
         }
 
         .setting-input:focus {
@@ -736,66 +771,6 @@
             .settings-button {
                 padding: 16px;
                 font-size: 1rem;
-            }
-        }
-
-        @media (max-height: 600px) {
-            .app-container {
-                padding: 12px;
-                gap: 12px;
-            }
-
-            .total-card {
-                padding: 16px;
-            }
-
-            .total-icon {
-                width: 44px;
-                height: 44px;
-            }
-
-            .progress-card {
-                padding: 14px;
-                gap: 8px;
-            }
-
-            .card-icon {
-                width: 32px;
-                height: 32px;
-            }
-
-            .time-days, .time-clock {
-                font-size: 1rem;
-            }
-
-            .settings-button {
-                padding: 14px;
-            }
-        }
-
-        /* Для очень маленьких экранов */
-        @media (max-width: 350px) {
-            .setting-row {
-                grid-template-columns: 1fr 70px 40px;
-                gap: 8px;
-            }
-
-            .setting-input {
-                padding: 10px;
-                font-size: 0.85rem;
-            }
-
-            .modal-header {
-                padding: 16px 20px 12px;
-            }
-
-            .settings-list {
-                padding: 16px 20px;
-                gap: 16px;
-            }
-
-            .modal-footer {
-                padding: 16px 20px;
             }
         }
     </style>
