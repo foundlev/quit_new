@@ -42,6 +42,7 @@
             --path-color: #10b981;
             --control-color: #f59e0b;
             --peace-color: #3b82f6;
+            --sweets-color: #ec4899;
 
             /* Кнопки */
             --button-color: #6366f1;
@@ -210,6 +211,10 @@
             border-top: 3px solid var(--peace-color);
         }
 
+        .card-sweets {
+            border-top: 3px solid var(--sweets-color);
+        }
+
         .card-header {
             display: flex;
             align-items: center;
@@ -240,6 +245,11 @@
         .card-peace .card-icon {
             background-color: rgba(59, 130, 246, 0.15);
             color: var(--peace-color);
+        }
+
+        .card-sweets .card-icon {
+            background-color: rgba(236, 72, 153, 0.15);
+            color: var(--sweets-color);
         }
 
         .card-title {
@@ -276,6 +286,12 @@
             color: var(--peace-color);
             background: rgba(59, 130, 246, 0.12);
             border-color: rgba(59, 130, 246, 0.35);
+        }
+
+        .card-sweets .card-percent {
+            color: var(--sweets-color);
+            background: rgba(236, 72, 153, 0.12);
+            border-color: rgba(236, 72, 153, 0.35);
         }
 
         /* Время в одну строку – более аккуратный вид */
@@ -324,6 +340,11 @@
             border-color: rgba(59, 130, 246, 0.35);
         }
 
+        .card-sweets .time-clock {
+            background: rgba(236, 72, 153, 0.12);
+            border-color: rgba(236, 72, 153, 0.35);
+        }
+
         .card-progress {
             height: 6px;
             background-color: var(--progress-bg);
@@ -348,6 +369,10 @@
 
         .card-peace .card-progress-fill {
             background: linear-gradient(90deg, var(--peace-color), #60a5fa);
+        }
+
+        .card-sweets .card-progress-fill {
+            background: linear-gradient(90deg, var(--sweets-color), #fb7185);
         }
 
         /* Кнопка настроек */
@@ -851,6 +876,25 @@
                     <div class="card-progress-fill" id="peace-progress" style="width: 0%"></div>
                 </div>
             </div>
+
+            <!-- Сладкое -->
+            <div class="progress-card card-sweets" id="sweets-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-candy-cane"></i>
+                    </div>
+                    <div class="card-title">Сладкое</div>
+                    <div class="card-percent" id="sweets-percent">0%</div>
+                </div>
+                <div class="card-time">
+                    <span class="time-days" id="sweets-days">0 дней</span>
+                    <span class="time-separator">•</span>
+                    <span class="time-clock" id="sweets-time">00:00:00</span>
+                </div>
+                <div class="card-progress">
+                    <div class="card-progress-fill" id="sweets-progress" style="width: 0%"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Кнопка настроек -->
@@ -942,6 +986,30 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Настройки для "Сладкое" -->
+                <div class="setting-group" id="sweets-settings">
+                    <div class="setting-title">
+                        <div class="card-icon">
+                            <i class="fas fa-candy-cane"></i>
+                        </div>
+                        Сладкое
+                    </div>
+
+                    <div class="setting-row">
+                        <div>
+                            <div class="setting-label">Дата</div>
+                            <input type="datetime-local" class="setting-input compact" id="sweets-start-date">
+                        </div>
+                        <div>
+                            <div class="setting-label">Цель (дн.)</div>
+                            <input type="number" class="setting-input compact" id="sweets-goal-days" min="1" max="365" value="10">
+                        </div>
+                        <button class="reset-button" id="reset-sweets" title="Сбросить на текущее время">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="modal-footer">
@@ -986,6 +1054,13 @@
                 goalDays: 30,
                 color: '#3b82f6',
                 elementId: 'peace'
+            },
+            sweets: {
+                name: 'Сладкое',
+                startDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 день назад
+                goalDays: 10,
+                color: '#ec4899',
+                elementId: 'sweets'
             }
         };
 
@@ -1171,6 +1246,12 @@
                 animateReset('reset-peace', 'peace-start-date');
             });
 
+            document.getElementById('reset-sweets').addEventListener('click', () => {
+                tempSettings.sweets.startDate = new Date();
+                updateSettingsForm();
+                animateReset('reset-sweets', 'sweets-start-date');
+            });
+
             // Сохранение настроек
             saveBtn.addEventListener('click', () => {
                 // Сохраняем данные из формы во временные настройки
@@ -1233,6 +1314,9 @@
 
                 document.getElementById('peace-start-date').value = formatDateForInput(tempSettings.peace.startDate);
                 document.getElementById('peace-goal-days').value = tempSettings.peace.goalDays;
+
+                document.getElementById('sweets-start-date').value = formatDateForInput(tempSettings.sweets.startDate);
+                document.getElementById('sweets-goal-days').value = tempSettings.sweets.goalDays;
             }
 
             // Сохранение данных из формы во временные настройки
@@ -1245,6 +1329,9 @@
 
                 tempSettings.peace.startDate = new Date(document.getElementById('peace-start-date').value);
                 tempSettings.peace.goalDays = parseInt(document.getElementById('peace-goal-days').value);
+
+                tempSettings.sweets.startDate = new Date(document.getElementById('sweets-start-date').value);
+                tempSettings.sweets.goalDays = parseInt(document.getElementById('sweets-goal-days').value);
             }
 
             // Закрытие по клику вне окна
