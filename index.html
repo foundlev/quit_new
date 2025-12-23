@@ -99,7 +99,7 @@
 <body class="min-h-screen flex flex-col p-6 safe-area-top safe-area-bottom">
 
     <!-- Header / Progress Grid -->
-    <header class="mb-8">
+    <header class="mb-8" style="margin-top: 20px;">
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-2xl font-bold">Прогресс</h1>
             <button id="settingsBtn" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
@@ -114,8 +114,8 @@
 
     <!-- Main Timer -->
     <main class="flex-grow flex flex-col items-center justify-center text-center">
-        <div class="mb-2 opacity-60 uppercase tracking-widest text-sm">Время чистоты</div>
-        <div id="timer" class="text-5xl font-mono font-bold tabular-nums flex gap-1">
+        <div class="mb-2 opacity-60 uppercase tracking-widest text-sm">Время битвы</div>
+        <div id="timer" class="text-[2.75rem] font-mono font-bold tabular-nums flex gap-1">
             <span class="timer-segment" id="days-seg">00</span>:<span class="timer-segment" id="hours-seg">00</span>:<span class="timer-segment" id="mins-seg">00</span>:<span class="timer-segment" id="secs-seg">00</span>
         </div>
         <div class="grid grid-cols-4 w-full max-w-xs mt-2 text-[10px] uppercase opacity-40">
@@ -129,9 +129,9 @@
     <!-- Actions -->
     <footer class="mt-8 space-y-4">
         <div class="grid grid-cols-2 gap-4">
-            <button onclick="openEventModal('ломка')" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-gray-100 dark:bg-gray-900 active:scale-95 transition-transform">
+            <button onclick="openEventModal('шторм')" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-gray-100 dark:bg-gray-900 active:scale-95 transition-transform">
                 <i data-lucide="zap" class="text-orange-500 mb-2"></i>
-                <span class="text-sm font-medium">Ломка</span>
+                <span class="text-sm font-medium">Шторм</span>
             </button>
             <button onclick="openEventModal('грусть')" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-gray-100 dark:bg-gray-900 active:scale-95 transition-transform">
                 <i data-lucide="frown" class="text-blue-500 mb-2"></i>
@@ -144,7 +144,7 @@
         </div>
 
         <button id="resetBtn" class="w-full py-4 rounded-2xl bg-blue-500 text-white font-bold active:scale-95 transition-transform shadow-lg shadow-blue-500/20">
-            Я СОРВАЛСЯ
+            ПРОИГРЫШ
         </button>
     </footer>
 
@@ -345,7 +345,7 @@
                 return;
             }
             const e = state.events[0];
-            const icon = e.type === 'ломка' ? '⚡️' : '☹️';
+            const icon = e.type === 'шторм' ? '⚡️' : '☹️';
             recentEventsDiv.innerHTML = `
                 <div class="flex gap-2 items-center text-xs opacity-60 bg-gray-50 dark:bg-gray-900/50 px-4 py-2 rounded-full">
                     <span class="font-bold">${icon} ${e.type} (${e.intensity})</span>
