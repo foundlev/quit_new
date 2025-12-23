@@ -1,1364 +1,424 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="utf-8">
-    <title>Сила × 90</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-    <meta name="color-scheme" content="light dark">
-    <!-- Font Awesome (локальный путь, как у тебя) -->
-    <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>Quit Tracker</title>
 
-    <!-- Manifest -->
-    <link rel="manifest" href="/manifest.webmanifest">
-
-    <!-- Цвет статус-бара и системных UI (Android + Chrome iOS) -->
-    <meta name="theme-color" content="#141821" media="(prefers-color-scheme: dark)">
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-
-    <!-- iOS PWA full-screen -->
+    <!-- PWA Meta -->
+    <meta name="theme-color" content="#0a0e1a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <!-- Варианты: default / black / black-translucent. Для Dynamic Island чаще лучше translucent -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
 
-    <meta name="apple-mobile-web-app-title" content="Сила × 90">
-
-    <!-- iOS иконки -->
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" sizes="180x180">
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon-167.png" sizes="167x167">
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon-152.png" sizes="152x152">
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon-120.png" sizes="120x120">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
-            /* Светлая тема */
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-color: #1e293b;
-            --progress-bg: #e2e8f0;
-            --shadow-color: rgba(0, 0, 0, 0.05);
-            --border-color: #e2e8f0;
-
-            /* Цвета прогресс-баров */
-            --total-color: #6366f1;
-            --path-color: #10b981;
-            --control-color: #f59e0b;
-            --peace-color: #3b82f6;
-            --sweets-color: #ec4899;
-
-            /* Кнопки */
-            --button-color: #6366f1;
-            --button-hover: #4f46e5;
-
-            /* Анимации */
-            --reset-animation: resetPulse 0.3s ease;
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --accent-color: #3b82f6;
+            --grid-empty: #e5e7eb;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                /* Темная тема */
-                --bg-color: #0f172a;
-                --card-bg: #1e293b;
-                --text-color: #f1f5f9;
-                --progress-bg: #334155;
-                --shadow-color: rgba(0, 0, 0, 0.2);
-                --border-color: #334155;
+                --bg-color: #0a0a0a;
+                --text-color: #ffffff;
+                --accent-color: #60a5fa;
+                --grid-empty: #1f2937;
             }
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            min-height: 100vh;
-            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .app-container {
-            max-width: 100%;
-            padding: 20px 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+        .grid-cell {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            background-color: var(--grid-empty);
+            transition: background-color 0.5s;
         }
 
-        /* Общий прогресс */
-        .total-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
-            border: 2px solid rgba(99, 102, 241, 0.2);
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 8px;
-            margin-top: 40px;
+        .grid-cell.level-0 { background-color: #10b981; } /* Green */
+        .grid-cell.level-1 { background-color: #f59e0b; } /* Orange */
+        .grid-cell.level-2 { background-color: #ef4444; } /* Red */
+        .grid-cell.level-3 { background-color: #7f1d1d; } /* Dark Red */
+
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        .total-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--total-color), #8b5cf6);
+        .safe-area-top {
+            padding-top: env(safe-area-inset-top);
         }
 
-        .total-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .total-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            background: linear-gradient(135deg, var(--total-color), #8b5cf6);
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .total-info {
-            flex: 1;
-        }
-
-        .total-title {
-            font-size: 1rem;
-            font-weight: 600;
-            opacity: 0.8;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .total-percent {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--total-color);
-            line-height: 1;
-        }
-
-        .total-progress {
-            height: 12px;
-            background-color: var(--progress-bg);
-            border-radius: 6px;
-            overflow: hidden;
-            margin-top: 4px;
-        }
-
-        .total-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--total-color), #8b5cf6);
-            border-radius: 6px;
-            transition: width 0.5s ease;
-            position: relative;
-        }
-
-        .total-progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.3) 50%,
-                rgba(255, 255, 255, 0) 100%);
-            background-size: 200% 100%;
-            animation: shimmer 2s infinite;
-        }
-
-        /* Карточки прогрессов - компактные */
-        .progress-cards {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .progress-card {
-            background: var(--card-bg);
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 4px 16px var(--shadow-color);
-            border: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        /* Цвета для карточек */
-        .card-path {
-            border-top: 3px solid var(--path-color);
-        }
-
-        .card-control {
-            border-top: 3px solid var(--control-color);
-        }
-
-        .card-peace {
-            border-top: 3px solid var(--peace-color);
-        }
-
-        .card-sweets {
-            border-top: 3px solid var(--sweets-color);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .card-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            flex-shrink: 0;
-        }
-
-        .card-path .card-icon {
-            background-color: rgba(16, 185, 129, 0.15);
-            color: var(--path-color);
-        }
-
-        .card-control .card-icon {
-            background-color: rgba(245, 158, 11, 0.15);
-            color: var(--control-color);
-        }
-
-        .card-peace .card-icon {
-            background-color: rgba(59, 130, 246, 0.15);
-            color: var(--peace-color);
-        }
-
-        .card-sweets .card-icon {
-            background-color: rgba(236, 72, 153, 0.15);
-            color: var(--sweets-color);
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            flex: 1;
-        }
-
-        .card-percent {
-            font-size: 1rem;
-            font-weight: 700;
-            min-width: 64px;
-            text-align: right;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: rgba(148, 163, 184, 0.18);
-            border: 1px solid rgba(148, 163, 184, 0.35);
-            line-height: 1;
-        }
-
-        .card-path .card-percent {
-            color: var(--path-color);
-            background: rgba(16, 185, 129, 0.12);
-            border-color: rgba(16, 185, 129, 0.35);
-        }
-
-        .card-control .card-percent {
-            color: var(--control-color);
-            background: rgba(245, 158, 11, 0.12);
-            border-color: rgba(245, 158, 11, 0.35);
-        }
-
-        .card-peace .card-percent {
-            color: var(--peace-color);
-            background: rgba(59, 130, 246, 0.12);
-            border-color: rgba(59, 130, 246, 0.35);
-        }
-
-        .card-sweets .card-percent {
-            color: var(--sweets-color);
-            background: rgba(236, 72, 153, 0.12);
-            border-color: rgba(236, 72, 153, 0.35);
-        }
-
-        /* Время в одну строку – более аккуратный вид */
-        .card-time {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-family: inherit;
-        }
-
-        .time-days {
-            font-size: 1.15rem;
-            font-weight: 600;
-            white-space: nowrap;
-            letter-spacing: 0.02em;
-        }
-
-        .time-separator {
-            font-size: 0.8rem;
-            opacity: 0.5;
-        }
-
-        .time-clock {
-            font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-            font-size: 0.95rem;
-            font-weight: 600;
-            letter-spacing: 0.08em;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: rgba(148, 163, 184, 0.18);
-            border: 1px solid rgba(148, 163, 184, 0.35);
-        }
-
-        .card-path .time-clock {
-            background: rgba(16, 185, 129, 0.12);
-            border-color: rgba(16, 185, 129, 0.35);
-        }
-
-        .card-control .time-clock {
-            background: rgba(245, 158, 11, 0.12);
-            border-color: rgba(245, 158, 11, 0.35);
-        }
-
-        .card-peace .time-clock {
-            background: rgba(59, 130, 246, 0.12);
-            border-color: rgba(59, 130, 246, 0.35);
-        }
-
-        .card-sweets .time-clock {
-            background: rgba(236, 72, 153, 0.12);
-            border-color: rgba(236, 72, 153, 0.35);
-        }
-
-        .card-progress {
-            height: 6px;
-            background-color: var(--progress-bg);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-top: 4px;
-        }
-
-        .card-progress-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.5s ease;
-        }
-
-        .card-path .card-progress-fill {
-            background: linear-gradient(90deg, var(--path-color), #34d399);
-        }
-
-        .card-control .card-progress-fill {
-            background: linear-gradient(90deg, var(--control-color), #fbbf24);
-        }
-
-        .card-peace .card-progress-fill {
-            background: linear-gradient(90deg, var(--peace-color), #60a5fa);
-        }
-
-        .card-sweets .card-progress-fill {
-            background: linear-gradient(90deg, var(--sweets-color), #fb7185);
-        }
-
-        /* Кнопка настроек */
-        .settings-button {
-            background: var(--button-color);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            padding: 20px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: auto;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .settings-button:hover {
-            background: var(--button-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
-        }
-
-        .settings-button:active {
-            transform: translateY(0);
-        }
-
-        .settings-button i {
-            font-size: 1.3rem;
-        }
-
-        /* Модальное окно настроек - компактное */
-        .modal-overlay {
+        .modal {
+            display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 0;
-            width: 100%;
-            max-width: 450px;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .modal-header {
-            padding: 20px 24px 16px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.5rem;
-            cursor: pointer;
-            opacity: 0.7;
-            padding: 8px;
-        }
-
-        .modal-close:hover {
-            opacity: 1;
-        }
-
-        /* Настройки - компактные в одну строку */
-        .settings-list {
-            flex: 1;
-            padding: 20px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .setting-group {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .setting-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .setting-title .card-icon {
-            width: 36px;
-            height: 36px;
-            font-size: 1rem;
-        }
-
-        /* Строка настроек — flex, чтобы iOS не сдвигал поля */
-        .setting-row {
-            display: flex;
-            align-items: flex-end;
-            gap: 12px;
-        }
-
-        .setting-row > div {
-            flex: 1 1 0;
-            min-width: 0;
-        }
-
-        .setting-row .setting-input {
-            width: 100%;
-            min-width: 0;
-        }
-
-        .reset-button {
-            flex: 0 0 40px;
-        }
-
-        .setting-input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 2px solid var(--border-color);
-            border-radius: 10px;
-            background: var(--bg-color);
-            color: var(--text-color);
-            font-size: 0.95rem;
-            font-family: inherit;
-            transition: all 0.3s ease;
-        }
-
-        input[type="datetime-local"],
-        input[type="number"] {
-            max-width: 100%;
-            box-sizing: border-box;
-            font-size: 0.9rem;
-        }
-
-        .setting-input:focus {
-            outline: none;
-            border-color: var(--button-color);
-        }
-
-        .setting-input.compact {
-            padding: 10px 12px;
-            font-size: 0.9rem;
-        }
-
-        .setting-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            opacity: 0.7;
-            margin-bottom: 4px;
-            display: block;
-        }
-
-        /* Кнопка сброса - только иконка */
-        .reset-button {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-            border: 2px solid rgba(239, 68, 68, 0.2);
-            display: flex;
+            backdrop-filter: blur(4px);
+            z-index: 50;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 1rem;
         }
 
-        .reset-button:hover {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: rgba(239, 68, 68, 0.3);
-            transform: scale(1.1);
-        }
-
-        .reset-button:active {
-            transform: scale(0.95);
-        }
-
-        /* Анимация при сбросе */
-        @keyframes resetPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); background-color: rgba(239, 68, 68, 0.3); }
-            100% { transform: scale(1); }
-        }
-
-        .reset-button.active {
-            animation: var(--reset-animation);
-        }
-
-        /* Подсветка поля при сбросе */
-        .setting-input.reset-highlight {
-            animation: fieldHighlight 1s ease;
-            border-color: #ef4444;
-        }
-
-        @keyframes fieldHighlight {
-            0% { border-color: #ef4444; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
-            50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-            100% { border-color: var(--border-color); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        .modal-footer {
-            padding: 20px 24px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            gap: 16px;
-        }
-
-        .modal-footer button {
-            flex: 1;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: none;
-        }
-
-        .cancel-button {
-            background: var(--progress-bg);
-            color: var(--text-color);
-        }
-
-        .cancel-button:hover {
-            background: var(--border-color);
-        }
-
-        .save-button {
-            background: var(--button-color);
-            color: white;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .save-button:hover {
-            background: var(--button-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
-        }
-
-        .save-button:active {
-            transform: translateY(0);
-        }
-
-        /* Подтверждение сохранения */
-        .confirm-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            padding: 20px;
-        }
-
-        .confirm-overlay.active {
+        .modal.open {
             display: flex;
         }
 
-        .confirm-content {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 24px;
-            width: 100%;
-            max-width: 380px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        /* Timer Animation */
+        .timer-digit {
+            display: inline-block;
+            min-width: 0.6em;
+            position: relative;
         }
 
-        .confirm-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 12px;
+        #timer {
+            font-weight: 500;
         }
 
-        .confirm-message {
-            font-size: 0.95rem;
-            opacity: 0.8;
-            margin-bottom: 24px;
-            line-height: 1.5;
+        .digit-inner {
+            display: inline-block;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s;
         }
 
-        .confirm-buttons {
-            display: flex;
-            gap: 12px;
-        }
-
-        .confirm-buttons button {
-            flex: 1;
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: none;
-        }
-
-        .confirm-no {
-            background: var(--progress-bg);
-            color: var(--text-color);
-        }
-
-        .confirm-no:hover {
-            background: var(--border-color);
-        }
-
-        .confirm-yes {
-            background: var(--button-color);
-            color: white;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .confirm-yes:hover {
-            background: var(--button-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
-        }
-
-        /* Анимации */
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .total-card {
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        .progress-card {
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        .progress-card:nth-child(1) {
-            animation-delay: 0.1s;
-        }
-
-        .progress-card:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .progress-card:nth-child(3) {
-            animation-delay: 0.3s;
-        }
-
-        /* Адаптация */
-        @media (max-height: 700px) {
-            .app-container {
-                padding: 16px 14px;
-                gap: 16px;
-            }
-
-            .total-card {
-                padding: 20px;
-            }
-
-            .total-icon {
-                width: 48px;
-                height: 48px;
-                font-size: 1.5rem;
-            }
-
-            .total-percent {
-                font-size: 2rem;
-            }
-
-            .progress-card {
-                padding: 16px;
-                gap: 10px;
-            }
-
-            .card-icon {
-                width: 36px;
-                height: 36px;
-            }
-
-            .time-days, .time-clock {
-                font-size: 1.1rem;
-            }
-
-            .settings-button {
-                padding: 16px;
-                font-size: 1rem;
-            }
+        .digit-changing {
+            transform: translateY(-20%) scale(0.8);
+            opacity: 0;
         }
     </style>
 </head>
-<body>
-    <div class="app-container">
-        <!-- Общий прогресс -->
-        <div class="total-card">
-            <div class="total-header">
-                <div class="total-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="total-info">
-                    <div class="total-title">Общий прогресс</div>
-                    <div class="total-percent" id="total-percent">0%</div>
-                </div>
-            </div>
-            <div class="total-progress">
-                <div class="total-progress-fill" id="total-progress" style="width: 0%"></div>
-            </div>
+<body class="min-h-screen flex flex-col p-6 safe-area-top safe-area-bottom">
+
+    <!-- Header / Progress Grid -->
+    <header class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl font-bold">Прогресс</h1>
+            <button id="settingsBtn" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+                <i data-lucide="settings"></i>
+            </button>
+        </div>
+        <div id="progressGrid" class="grid grid-cols-10 gap-2 mb-2">
+            <!-- 30 cells will be generated here -->
+        </div>
+        <p class="text-sm opacity-60 text-center" id="progressText">0 из 30 дней</p>
+    </header>
+
+    <!-- Main Timer -->
+    <main class="flex-grow flex flex-col items-center justify-center text-center">
+        <div class="mb-2 opacity-60 uppercase tracking-widest text-sm">Время чистоты</div>
+        <div id="timer" class="text-5xl font-mono font-bold tabular-nums flex gap-1">
+            <span class="timer-segment" id="days-seg">00</span>:<span class="timer-segment" id="hours-seg">00</span>:<span class="timer-segment" id="mins-seg">00</span>:<span class="timer-segment" id="secs-seg">00</span>
+        </div>
+        <div class="grid grid-cols-4 w-full max-w-xs mt-2 text-[10px] uppercase opacity-40">
+            <div>Дни</div>
+            <div>Часы</div>
+            <div>Мин</div>
+            <div>Сек</div>
+        </div>
+    </main>
+
+    <!-- Actions -->
+    <footer class="mt-8 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="openEventModal('ломка')" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-gray-100 dark:bg-gray-900 active:scale-95 transition-transform">
+                <i data-lucide="zap" class="text-orange-500 mb-2"></i>
+                <span class="text-sm font-medium">Ломка</span>
+            </button>
+            <button onclick="openEventModal('грусть')" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-gray-100 dark:bg-gray-900 active:scale-95 transition-transform">
+                <i data-lucide="frown" class="text-blue-500 mb-2"></i>
+                <span class="text-sm font-medium">Грусть</span>
+            </button>
         </div>
 
-        <!-- Прогрессы -->
-        <div class="progress-cards">
-            <!-- Путь -->
-            <div class="progress-card card-path" id="path-card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i class="fas fa-road"></i>
-                    </div>
-                    <div class="card-title">Путь</div>
-                    <div class="card-percent" id="path-percent">0%</div>
-                </div>
-                <div class="card-time">
-                    <span class="time-days" id="path-days">0 дней</span>
-                    <span class="time-separator">•</span>
-                    <span class="time-clock" id="path-time">00:00:00</span>
-                </div>
-                <div class="card-progress">
-                    <div class="card-progress-fill" id="path-progress" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Контроль -->
-            <div class="progress-card card-control" id="control-card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i class="fas fa-sliders-h"></i>
-                    </div>
-                    <div class="card-title">Контроль</div>
-                    <div class="card-percent" id="control-percent">0%</div>
-                </div>
-                <div class="card-time">
-                    <span class="time-days" id="control-days">0 дней</span>
-                    <span class="time-separator">•</span>
-                    <span class="time-clock" id="control-time">00:00:00</span>
-                </div>
-                <div class="card-progress">
-                    <div class="card-progress-fill" id="control-progress" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Равновесие -->
-            <div class="progress-card card-peace" id="peace-card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i class="fas fa-peace"></i>
-                    </div>
-                    <div class="card-title">Равновесие</div>
-                    <div class="card-percent" id="peace-percent">0%</div>
-                </div>
-                <div class="card-time">
-                    <span class="time-days" id="peace-days">0 дней</span>
-                    <span class="time-separator">•</span>
-                    <span class="time-clock" id="peace-time">00:00:00</span>
-                </div>
-                <div class="card-progress">
-                    <div class="card-progress-fill" id="peace-progress" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Сладкое -->
-            <div class="progress-card card-sweets" id="sweets-card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i class="fas fa-candy-cane"></i>
-                    </div>
-                    <div class="card-title">Сладкое</div>
-                    <div class="card-percent" id="sweets-percent">0%</div>
-                </div>
-                <div class="card-time">
-                    <span class="time-days" id="sweets-days">0 дней</span>
-                    <span class="time-separator">•</span>
-                    <span class="time-clock" id="sweets-time">00:00:00</span>
-                </div>
-                <div class="card-progress">
-                    <div class="card-progress-fill" id="sweets-progress" style="width: 0%"></div>
-                </div>
-            </div>
+        <div id="recentEvents" class="flex justify-center">
+            <!-- Latest event will appear here -->
         </div>
 
-        <!-- Кнопка настроек -->
-        <button class="settings-button" id="settingsButton">
-            <i class="fas fa-cog"></i>
-            Настройки
+        <button id="resetBtn" class="w-full py-4 rounded-2xl bg-blue-500 text-white font-bold active:scale-95 transition-transform shadow-lg shadow-blue-500/20">
+            Я СОРВАЛСЯ
         </button>
-    </div>
+    </footer>
 
-    <!-- Модальное окно настроек -->
-    <div class="modal-overlay" id="settingsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Настройки прогресса</h2>
-                <button class="modal-close" id="closeModal">
-                    <i class="fas fa-times"></i>
-                </button>
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-sm mx-4 p-6 rounded-3xl shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Настройки</h2>
+                <button id="closeSettings" class="p-1"><i data-lucide="x"></i></button>
             </div>
 
-            <div class="settings-list">
-                <!-- Настройки для "Путь" -->
-                <div class="setting-group" id="path-settings">
-                    <div class="setting-title">
-                        <div class="card-icon">
-                            <i class="fas fa-road"></i>
-                        </div>
-                        Путь
-                    </div>
-
-                    <div class="setting-row">
-                        <div>
-                            <div class="setting-label">Дата</div>
-                            <input type="datetime-local" class="setting-input compact" id="path-start-date">
-                        </div>
-                        <div>
-                            <div class="setting-label">Цель (дн.)</div>
-                            <input type="number" class="setting-input compact" id="path-goal-days" min="1" max="365" value="30">
-                        </div>
-                        <button class="reset-button" id="reset-path" title="Сбросить на текущее время">
-                            <i class="fas fa-redo"></i>
-                        </button>
-                    </div>
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm opacity-60 mb-2">Дата начала</label>
+                    <input type="datetime-local" id="startDateInput" class="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-800 border-none outline-none focus:ring-2 ring-blue-500">
                 </div>
 
-                <!-- Настройки для "Контроль" -->
-                <div class="setting-group" id="control-settings">
-                    <div class="setting-title">
-                        <div class="card-icon">
-                            <i class="fas fa-sliders-h"></i>
-                        </div>
-                        Контроль
-                    </div>
-
-                    <div class="setting-row">
-                        <div>
-                            <div class="setting-label">Дата</div>
-                            <input type="datetime-local" class="setting-input compact" id="control-start-date">
-                        </div>
-                        <div>
-                            <div class="setting-label">Цель (дн.)</div>
-                            <input type="number" class="setting-input compact" id="control-goal-days" min="1" max="365" value="30">
-                        </div>
-                        <button class="reset-button" id="reset-control" title="Сбросить на текущее время">
-                            <i class="fas fa-redo"></i>
-                        </button>
-                    </div>
+                <div class="pt-4 border-t border-gray-100 dark:border-gray-800" style="display: none">
+                    <button id="fullReset" class="w-full py-3 rounded-xl text-red-500 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="display: none">
+                        Сбросить всё (очистить историю)
+                    </button>
                 </div>
-
-                <!-- Настройки для "Равновесие" -->
-                <div class="setting-group" id="peace-settings">
-                    <div class="setting-title">
-                        <div class="card-icon">
-                            <i class="fas fa-peace"></i>
-                        </div>
-                        Равновесие
-                    </div>
-
-                    <div class="setting-row">
-                        <div>
-                            <div class="setting-label">Дата</div>
-                            <input type="datetime-local" class="setting-input compact" id="peace-start-date">
-                        </div>
-                        <div>
-                            <div class="setting-label">Цель (дн.)</div>
-                            <input type="number" class="setting-input compact" id="peace-goal-days" min="1" max="365" value="30">
-                        </div>
-                        <button class="reset-button" id="reset-peace" title="Сбросить на текущее время">
-                            <i class="fas fa-redo"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Настройки для "Сладкое" -->
-                <div class="setting-group" id="sweets-settings">
-                    <div class="setting-title">
-                        <div class="card-icon">
-                            <i class="fas fa-candy-cane"></i>
-                        </div>
-                        Сладкое
-                    </div>
-
-                    <div class="setting-row">
-                        <div>
-                            <div class="setting-label">Дата</div>
-                            <input type="datetime-local" class="setting-input compact" id="sweets-start-date">
-                        </div>
-                        <div>
-                            <div class="setting-label">Цель (дн.)</div>
-                            <input type="number" class="setting-input compact" id="sweets-goal-days" min="1" max="365" value="10">
-                        </div>
-                        <button class="reset-button" id="reset-sweets" title="Сбросить на текущее время">
-                            <i class="fas fa-redo"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="cancel-button" id="cancelSettings">Отмена</button>
-                <button class="save-button" id="saveSettings">Сохранить</button>
             </div>
         </div>
     </div>
 
-    <!-- Окно подтверждения -->
-    <div class="confirm-overlay" id="confirmModal">
-        <div class="confirm-content">
-            <h2 class="confirm-title">Подтверждение</h2>
-            <p class="confirm-message">Сохранить новые настройки? Прогресс будет пересчитан.</p>
-            <div class="confirm-buttons">
-                <button class="confirm-no" id="confirmNo">Отмена</button>
-                <button class="confirm-yes" id="confirmYes">Сохранить</button>
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-sm mx-4 p-8 rounded-3xl shadow-2xl text-center">
+            <h2 class="text-xl font-bold mb-4">Вы уверены?</h2>
+            <p class="opacity-60 mb-8" id="confirmText">Это действие нельзя будет отменить.</p>
+            <div class="flex gap-4">
+                <button id="confirmCancel" class="flex-1 py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 font-bold">Отмена</button>
+                <button id="confirmYes" class="flex-1 py-4 rounded-2xl bg-red-500 text-white font-bold">Да</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Level Modal -->
+    <div id="eventModal" class="modal">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-sm mx-4 p-8 rounded-3xl shadow-2xl text-center">
+            <h2 class="text-xl font-bold mb-6" id="eventModalTitle">Уровень интенсивности</h2>
+            <div class="space-y-4">
+                <button onclick="submitEvent('средняя')" class="w-full py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 font-bold active:scale-95 transition-transform">Средняя</button>
+                <button onclick="submitEvent('сильная')" class="w-full py-4 rounded-2xl bg-red-500 text-white font-bold active:scale-95 transition-transform">Сильная</button>
+                <button onclick="closeModal('eventModal')" class="w-full py-2 opacity-40 text-sm">Отмена</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Данные прогресс-баров
-        const progressData = {
-            path: {
-                name: 'Путь',
-                startDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 дней назад
-                goalDays: 30,
-                color: '#10b981',
-                elementId: 'path'
-            },
-            control: {
-                name: 'Контроль',
-                startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 дней назад
-                goalDays: 30,
-                color: '#f59e0b',
-                elementId: 'control'
-            },
-            peace: {
-                name: 'Равновесие',
-                startDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 дня назад
-                goalDays: 30,
-                color: '#3b82f6',
-                elementId: 'peace'
-            },
-            sweets: {
-                name: 'Сладкое',
-                startDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 день назад
-                goalDays: 10,
-                color: '#ec4899',
-                elementId: 'sweets'
-            }
+        // State Management
+        let state = {
+            startDate: localStorage.getItem('startDate') ? new Date(localStorage.getItem('startDate')) : new Date(),
+            events: JSON.parse(localStorage.getItem('events') || '[]')
         };
 
-        // Временные настройки для модального окна
-        let tempSettings = JSON.parse(JSON.stringify(progressData));
-
-        // Функция форматирования времени
-        function formatTime(totalSeconds) {
-            const days = Math.floor(totalSeconds / (24 * 60 * 60));
-            const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = Math.floor(totalSeconds % 60);
-
-            return {
-                days: days,
-                daysText: `${days} ${getDayWord(days)}`,
-                time: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-            };
+        // Demo Data if empty
+        if (state.events.length === 0 && !state.startDate) {
+            state.startDate = new Date();
+            state.events = [];
+            saveState();
         }
 
-        // Правильное склонение слова "день"
-        function getDayWord(days) {
-            const lastDigit = days % 10;
-            const lastTwoDigits = days % 100;
-
-            if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
-                return 'дней';
-            }
-
-            if (lastDigit === 1) {
-                return 'день';
-            }
-
-            if (lastDigit >= 2 && lastDigit <= 4) {
-                return 'дня';
-            }
-
-            return 'дней';
+        function saveState() {
+            localStorage.setItem('startDate', state.startDate.toISOString());
+            localStorage.setItem('events', JSON.stringify(state.events));
         }
 
-        // Расчет прогресса
-        function calculateProgress(data) {
+        // Initialize Grid
+        const grid = document.getElementById('progressGrid');
+        for (let i = 0; i < 30; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'grid-cell';
+            grid.appendChild(cell);
+        }
+
+        // UI Elements
+        const progressText = document.getElementById('progressText');
+        const settingsModal = document.getElementById('settingsModal');
+        const confirmModal = document.getElementById('confirmModal');
+        const eventModal = document.getElementById('eventModal');
+        const startDateInput = document.getElementById('startDateInput');
+        const recentEventsDiv = document.getElementById('recentEvents');
+
+        let pendingEventType = null;
+        let confirmCallback = null;
+
+        function updateUI() {
             const now = new Date();
-            const elapsed = (now - data.startDate) / 1000; // в секундах
-            const goal = data.goalDays * 24 * 60 * 60; // цель в секундах
+            const diff = now - state.startDate;
 
-            let percent = Math.min(100, (elapsed / goal) * 100);
-
-            return {
-                percent: percent,
-                elapsed: elapsed,
-                goal: goal
-            };
-        }
-
-        // Обновление отображения прогресса
-        function updateProgressDisplay() {
-            let totalElapsedDays = 0;
-            let totalGoalDays = 0;
-
-            Object.keys(progressData).forEach(key => {
-                const data = progressData[key];
-                const progress = calculateProgress(data);
-                const time = formatTime(progress.elapsed);
-
-                // Обновление карточек
-                document.getElementById(`${data.elementId}-percent`).textContent = `${Math.round(progress.percent)}%`;
-                document.getElementById(`${data.elementId}-days`).textContent = time.daysText;
-                document.getElementById(`${data.elementId}-time`).textContent = time.time;
-                document.getElementById(`${data.elementId}-progress`).style.width = `${progress.percent}%`;
-
-                // Для общего прогресса считаем в днях
-                const elapsedDays = progress.elapsed / (24 * 60 * 60);
-                totalElapsedDays += elapsedDays;
-                totalGoalDays += data.goalDays;
-            });
-
-            let totalPercent = 0;
-            if (totalGoalDays > 0) {
-                totalPercent = Math.min(100, (totalElapsedDays / totalGoalDays) * 100);
+            if (diff < 0) {
+                updateTimerDisplay(0, 0, 0, 0);
+                updateGrid(0);
+                return;
             }
 
-            document.getElementById('total-percent').textContent = `${Math.round(totalPercent)}%`;
-            document.getElementById('total-progress').style.width = `${totalPercent}%`;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            updateTimerDisplay(days, hours, minutes, seconds);
+            updateGrid(diff);
+            renderEvents();
         }
 
-        // Обновление каждую секунду
-        function updateProgress() {
-            updateProgressDisplay();
+        function updateTimerDisplay(d, h, m, s) {
+            updateSegment('days-seg', String(d).padStart(2, '0'));
+            updateSegment('hours-seg', String(h).padStart(2, '0'));
+            updateSegment('mins-seg', String(m).padStart(2, '0'));
+            updateSegment('secs-seg', String(s).padStart(2, '0'));
         }
 
-        // Анимация при сбросе
-        function animateReset(buttonId, inputId) {
-            const button = document.getElementById(buttonId);
-            const input = document.getElementById(inputId);
-
-            // Анимация кнопки
-            button.classList.add('active');
-            setTimeout(() => {
-                button.classList.remove('active');
-            }, 300);
-
-            // Подсветка поля
-            input.classList.add('reset-highlight');
-            setTimeout(() => {
-                input.classList.remove('reset-highlight');
-            }, 1000);
-        }
-
-        // Инициализация
-        function initApp() {
-            // Загрузка сохраненных настроек из localStorage
-            const savedSettings = localStorage.getItem('progressSettings');
-            if (savedSettings) {
-                const parsed = JSON.parse(savedSettings);
-                Object.keys(parsed).forEach(key => {
-                    if (progressData[key]) {
-                        progressData[key].startDate = new Date(parsed[key].startDate);
-                        progressData[key].goalDays = parsed[key].goalDays;
-                    }
-                });
-            }
-
-            // Запуск обновления
-            setInterval(updateProgress, 1000);
-            updateProgress();
-
-            // Настройка модального окна
-            setupModal();
-        }
-
-        // Настройка модального окна
-        function setupModal() {
-            const modal = document.getElementById('settingsModal');
-            const confirmModal = document.getElementById('confirmModal');
-            const openBtn = document.getElementById('settingsButton');
-            const closeBtn = document.getElementById('closeModal');
-            const cancelBtn = document.getElementById('cancelSettings');
-            const saveBtn = document.getElementById('saveSettings');
-            const confirmNo = document.getElementById('confirmNo');
-            const confirmYes = document.getElementById('confirmYes');
-
-            // Открытие модального окна
-            openBtn.addEventListener('click', () => {
-                // Сохраняем текущие настройки во временные
-                Object.keys(progressData).forEach(key => {
-                    tempSettings[key] = {
-                        ...progressData[key],
-                        startDate: new Date(progressData[key].startDate)
-                    };
-                });
-
-                // Заполняем поля формы
-                updateSettingsForm();
-                modal.classList.add('active');
-            });
-
-            // Закрытие модального окна
-            closeBtn.addEventListener('click', () => {
-                modal.classList.remove('active');
-            });
-
-            cancelBtn.addEventListener('click', () => {
-                modal.classList.remove('active');
-            });
-
-            // Сброс к текущему времени с анимацией
-            document.getElementById('reset-path').addEventListener('click', () => {
-                tempSettings.path.startDate = new Date();
-                updateSettingsForm();
-                animateReset('reset-path', 'path-start-date');
-            });
-
-            document.getElementById('reset-control').addEventListener('click', () => {
-                tempSettings.control.startDate = new Date();
-                updateSettingsForm();
-                animateReset('reset-control', 'control-start-date');
-            });
-
-            document.getElementById('reset-peace').addEventListener('click', () => {
-                tempSettings.peace.startDate = new Date();
-                updateSettingsForm();
-                animateReset('reset-peace', 'peace-start-date');
-            });
-
-            document.getElementById('reset-sweets').addEventListener('click', () => {
-                tempSettings.sweets.startDate = new Date();
-                updateSettingsForm();
-                animateReset('reset-sweets', 'sweets-start-date');
-            });
-
-            // Сохранение настроек
-            saveBtn.addEventListener('click', () => {
-                // Сохраняем данные из формы во временные настройки
-                saveFormToTemp();
-
-                // Показываем подтверждение
-                confirmModal.classList.add('active');
-            });
-
-            // Подтверждение сохранения
-            confirmYes.addEventListener('click', () => {
-                // Копируем временные настройки в основные
-                Object.keys(tempSettings).forEach(key => {
-                    progressData[key].startDate = new Date(tempSettings[key].startDate);
-                    progressData[key].goalDays = parseInt(tempSettings[key].goalDays);
-                });
-
-                // Сохраняем в localStorage
-                const settingsToSave = {};
-                Object.keys(progressData).forEach(key => {
-                    settingsToSave[key] = {
-                        startDate: progressData[key].startDate.toISOString(),
-                        goalDays: progressData[key].goalDays
-                    };
-                });
-                localStorage.setItem('progressSettings', JSON.stringify(settingsToSave));
-
-                // Обновляем отображение
-                updateProgressDisplay();
-
-                // Закрываем окна
-                confirmModal.classList.remove('active');
-                modal.classList.remove('active');
-            });
-
-            confirmNo.addEventListener('click', () => {
-                confirmModal.classList.remove('active');
-            });
-
-            // Обновление формы настроек
-            function updateSettingsForm() {
-                // Форматирование даты для input[type="datetime-local"]
-                function formatDateForInput(date) {
-                    const d = new Date(date);
-                    const year = d.getFullYear();
-                    const month = String(d.getMonth() + 1).padStart(2, '0');
-                    const day = String(d.getDate()).padStart(2, '0');
-                    const hours = String(d.getHours()).padStart(2, '0');
-                    const minutes = String(d.getMinutes()).padStart(2, '0');
-
-                    return `${year}-${month}-${day}T${hours}:${minutes}`;
+        function updateSegment(id, value) {
+            const seg = document.getElementById(id);
+            if (seg.textContent !== value) {
+                // Create digits if they don't exist or just update
+                if (seg.children.length === 0) {
+                    seg.innerHTML = value.split('').map(digit => `<span class="timer-digit"><span class="digit-inner">${digit}</span></span>`).join('');
+                } else {
+                    const digits = value.split('');
+                    Array.from(seg.children).forEach((child, i) => {
+                        const inner = child.querySelector('.digit-inner');
+                        if (inner.textContent !== digits[i]) {
+                            inner.classList.add('digit-changing');
+                            setTimeout(() => {
+                                inner.textContent = digits[i];
+                                inner.classList.remove('digit-changing');
+                            }, 150);
+                        }
+                    });
                 }
-
-                // Заполняем поля
-                document.getElementById('path-start-date').value = formatDateForInput(tempSettings.path.startDate);
-                document.getElementById('path-goal-days').value = tempSettings.path.goalDays;
-
-                document.getElementById('control-start-date').value = formatDateForInput(tempSettings.control.startDate);
-                document.getElementById('control-goal-days').value = tempSettings.control.goalDays;
-
-                document.getElementById('peace-start-date').value = formatDateForInput(tempSettings.peace.startDate);
-                document.getElementById('peace-goal-days').value = tempSettings.peace.goalDays;
-
-                document.getElementById('sweets-start-date').value = formatDateForInput(tempSettings.sweets.startDate);
-                document.getElementById('sweets-goal-days').value = tempSettings.sweets.goalDays;
             }
+        }
 
-            // Сохранение данных из формы во временные настройки
-            function saveFormToTemp() {
-                tempSettings.path.startDate = new Date(document.getElementById('path-start-date').value);
-                tempSettings.path.goalDays = parseInt(document.getElementById('path-goal-days').value);
+        function updateGrid(diffMs) {
+            const cells = document.querySelectorAll('.grid-cell');
 
-                tempSettings.control.startDate = new Date(document.getElementById('control-start-date').value);
-                tempSettings.control.goalDays = parseInt(document.getElementById('control-goal-days').value);
+            // Current day index (0-based). If diff is 0-24h, it's day 1 (index 0).
+            const currentDayIndex = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const totalDaysTracked = currentDayIndex + 1;
 
-                tempSettings.peace.startDate = new Date(document.getElementById('peace-start-date').value);
-                tempSettings.peace.goalDays = parseInt(document.getElementById('peace-goal-days').value);
+            cells.forEach((cell, i) => {
+                cell.className = 'grid-cell'; // Reset classes
+                if (i < totalDaysTracked && i < 30) {
+                    // Calculate "badness" for this specific day
+                    const dayStart = new Date(state.startDate.getTime() + i * 24 * 60 * 60 * 1000);
+                    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
 
-                tempSettings.sweets.startDate = new Date(document.getElementById('sweets-start-date').value);
-                tempSettings.sweets.goalDays = parseInt(document.getElementById('sweets-goal-days').value);
-            }
+                    const dayEvents = state.events.filter(e => {
+                        const eventTime = new Date(e.time);
+                        return eventTime >= dayStart && eventTime < dayEnd;
+                    });
 
-            // Закрытие по клику вне окна
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
+                    let score = 0;
+                    dayEvents.forEach(e => {
+                        score += (e.intensity === 'сильная' ? 2 : 1);
+                    });
+
+                    let level = 0; // Green
+                    if (score >= 6) level = 3; // Dark Red
+                    if (score >= 4) level = 2; // Red
+                    if (score >= 2) level = 1; // Orange
+
+                    cell.classList.add(`level-${level}`);
                 }
             });
-
-            confirmModal.addEventListener('click', (e) => {
-                if (e.target === confirmModal) {
-                    confirmModal.classList.remove('active');
-                }
-            });
+            progressText.textContent = `${Math.min(totalDaysTracked, 30)} из 30 дней`;
         }
 
-        // Запуск приложения
-        document.addEventListener('DOMContentLoaded', initApp);
-    </script>
+        function openEventModal(type) {
+            pendingEventType = type;
+            document.getElementById('eventModalTitle').textContent = type.charAt(0).toUpperCase() + type.slice(1);
+            eventModal.classList.add('open');
+        }
 
-    <script>
+        function submitEvent(intensity) {
+            state.events.unshift({
+                type: pendingEventType,
+                intensity: intensity,
+                time: new Date().toISOString()
+            });
+            state.events = state.events.slice(0, 50); // Store more but display only one
+            saveState();
+            closeModal('eventModal');
+            updateUI();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        function renderEvents() {
+            if (state.events.length === 0) {
+                recentEventsDiv.innerHTML = '';
+                return;
+            }
+            const e = state.events[0];
+            const icon = e.type === 'ломка' ? '⚡️' : '☹️';
+            recentEventsDiv.innerHTML = `
+                <div class="flex gap-2 items-center text-xs opacity-60 bg-gray-50 dark:bg-gray-900/50 px-4 py-2 rounded-full">
+                    <span class="font-bold">${icon} ${e.type} (${e.intensity})</span>
+                    <span>•</span>
+                    <span>${new Date(e.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                </div>
+            `;
+        }
+
+        // Events
+        document.getElementById('resetBtn').onclick = () => {
+            showConfirm('Вы уверены, что хотите сбросить прогресс?', () => {
+                state.startDate = new Date();
+                state.events = [];
+                localStorage.clear();
+                saveState();
+                updateUI();
+            });
+        };
+
+        function showConfirm(text, callback) {
+            document.getElementById('confirmText').textContent = text;
+            confirmCallback = callback;
+            confirmModal.classList.add('open');
+        }
+
+        document.getElementById('confirmYes').onclick = () => {
+            if (confirmCallback) confirmCallback();
+            confirmModal.classList.remove('open');
+        };
+
+        document.getElementById('confirmCancel').onclick = () => {
+            confirmModal.classList.remove('open');
+        };
+
+        document.getElementById('settingsBtn').onclick = () => {
+            startDateInput.value = new Date(state.startDate.getTime() - state.startDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            settingsModal.classList.add('open');
+        };
+
+        document.getElementById('closeSettings').onclick = () => {
+            settingsModal.classList.remove('open');
+        };
+
+        startDateInput.onchange = (e) => {
+            state.startDate = new Date(e.target.value);
+            saveState();
+            updateUI();
+        };
+
+        document.getElementById('fullReset').onclick = () => {
+            showConfirm('Это удалит всю историю событий и сбросит таймер. Продолжить?', () => {
+                localStorage.clear();
+                state.startDate = new Date();
+                state.events = [];
+                saveState();
+                updateUI();
+                settingsModal.classList.remove('open');
+            });
+        };
+
+        // Start
+        lucide.createIcons();
+        setInterval(updateUI, 1000);
+        updateUI();
+
+        // Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js');
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
             });
         }
+
     </script>
 </body>
 </html>
