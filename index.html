@@ -132,6 +132,10 @@
 
     <!-- Actions -->
     <footer class="mt-8 space-y-4">
+
+        <div id="recentEvents" class="flex justify-center">
+            <!-- Latest event will appear here -->
+        </div>
         <div class="grid grid-cols-2 gap-4">
             <button onclick="openEventModal('шторм')" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-gray-100 dark:bg-gray-900 active:scale-95 transition-transform">
                 <i data-lucide="zap" class="text-orange-500 mb-2"></i>
@@ -142,14 +146,6 @@
                 <span class="text-sm font-medium">Грусть</span>
             </button>
         </div>
-
-        <div id="recentEvents" class="flex justify-center">
-            <!-- Latest event will appear here -->
-        </div>
-
-        <button id="resetBtn" class="w-full py-4 rounded-2xl bg-blue-500 text-white font-bold active:scale-95 transition-transform shadow-lg shadow-blue-500/20">
-            ПРОИГРЫШ
-        </button>
     </footer>
 
     <!-- Settings Modal -->
@@ -169,6 +165,12 @@
                 <div class="pt-4 border-t border-gray-100 dark:border-gray-800" style="display: none">
                     <button id="fullReset" class="w-full py-3 rounded-xl text-red-500 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="display: none">
                         Сбросить всё (очистить историю)
+                    </button>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
+                    <button id="resetBtn" class="w-full py-4 rounded-2xl bg-blue-500 text-white font-bold active:scale-95 transition-transform shadow-lg shadow-blue-500/20">
+                        ПРОИГРЫШ
                     </button>
                 </div>
             </div>
@@ -367,6 +369,7 @@
                 localStorage.clear();
                 saveState();
                 updateUI();
+                settingsModal.classList.remove('open');
             });
         };
 
