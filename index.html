@@ -44,6 +44,29 @@
             border-radius: 4px;
             background-color: var(--grid-empty);
             transition: background-color 0.5s;
+            position: relative;
+        }
+
+        /* Highlight for the first 7 days */
+        .first-week-highlight {
+            position: absolute;
+            inset: -4px;
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.5;
+        }
+
+        .first-week-label {
+            position: absolute;
+            top: -18px;
+            left: 0;
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .grid-cell.level-0 { background-color: #10b981; } /* Green */
@@ -110,8 +133,12 @@
                 <i data-lucide="settings"></i>
             </button>
         </div>
-        <div id="progressGrid" class="grid grid-cols-10 gap-2 mb-2">
+        <div id="progressGrid" class="grid grid-cols-10 gap-2 mb-2 relative">
             <!-- 30 cells will be generated here -->
+            <div id="firstWeekHighlight" class="absolute pointer-events-none" style="display: none;">
+                <div class="border-2 border-blue-500 rounded-lg w-full h-full opacity-40"></div>
+                <div class="absolute -top-5 left-0 text-[10px] font-bold text-blue-500 uppercase tracking-wider"></div>
+            </div>
         </div>
         <p class="text-sm opacity-60 text-center" id="progressText">0 из 30 дней</p>
     </header>
@@ -169,6 +196,10 @@
                 </div>
 
                 <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
+                    <button id="copyBtn" class="w-full py-3 mb-4 rounded-xl bg-gray-100 dark:bg-gray-800 font-medium active:scale-95 transition-transform flex items-center justify-center gap-2">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                        <span id="copyBtnText">Копировать</span>
+                    </button>
                     <button id="resetBtn" class="w-full py-4 rounded-2xl bg-blue-500 text-white font-bold active:scale-95 transition-transform shadow-lg shadow-blue-500/20">
                         ПРОИГРЫШ
                     </button>
@@ -227,6 +258,29 @@
             cell.className = 'grid-cell';
             grid.appendChild(cell);
         }
+
+        function positionHighlight() {
+            const highlight = document.getElementById('firstWeekHighlight');
+            const cells = document.querySelectorAll('.grid-cell');
+            if (cells.length >= 7) {
+                const firstCell = cells[0];
+                const seventhCell = cells[6];
+                
+                const gridRect = grid.getBoundingClientRect();
+                const firstRect = firstCell.getBoundingClientRect();
+                const seventhRect = seventhCell.getBoundingClientRect();
+
+                highlight.style.left = (firstRect.left - gridRect.left - 4) + 'px';
+                highlight.style.top = (firstRect.top - gridRect.top - 4) + 'px';
+                highlight.style.width = (seventhRect.right - firstRect.left + 8) + 'px';
+                highlight.style.height = (firstRect.height + 8) + 'px';
+                highlight.style.display = 'block';
+            }
+        }
+        
+        // Initial position and on resize
+        window.addEventListener('load', positionHighlight);
+        window.addEventListener('resize', positionHighlight);
 
         // UI Elements
         const progressText = document.getElementById('progressText');
@@ -370,6 +424,42 @@
                 saveState();
                 updateUI();
                 settingsModal.classList.remove('open');
+            });
+        };
+
+        document.getElementById('copyBtn').onclick = () => {
+            const now = new Date();
+            const diff = now - state.startDate;
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            const getPlural = (n, forms) => {
+                const pr = new Intl.PluralRules('ru-RU');
+                const rule = pr.select(n);
+                switch (rule) {
+                    case 'one': return forms[0];
+                    case 'few': return forms[1];
+                    default: return forms[2];
+                }
+            };
+
+            let parts = [];
+            if (days > 0) parts.push(`${days} ${getPlural(days, ['день', 'дня', 'дней'])}`);
+            if (hours > 0 || days > 0) parts.push(`${hours} ${getPlural(hours, ['час', 'часа', 'часов'])}`);
+            parts.push(`${minutes} мин`);
+
+            const timeStr = parts.join(' ');
+            const textToCopy = `Время и дата: ${now.toLocaleString('ru-RU')}\nСо срыва: ${timeStr}`;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const btnText = document.getElementById('copyBtnText');
+                const originalText = btnText.textContent;
+                btnText.textContent = "Скопировано";
+                setTimeout(() => {
+                    btnText.textContent = originalText;
+                }, 2000);
             });
         };
 
