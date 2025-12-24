@@ -136,8 +136,7 @@
         <div id="progressGrid" class="grid grid-cols-10 gap-2 mb-2 relative">
             <!-- 30 cells will be generated here -->
             <div id="firstWeekHighlight" class="absolute pointer-events-none" style="display: none;">
-                <div class="border-2 border-blue-500 rounded-lg w-full h-full opacity-40"></div>
-                <div class="absolute -top-5 left-0 text-[10px] font-bold text-blue-500 uppercase tracking-wider"></div>
+                <!-- Content will be injected by JavaScript -->
             </div>
         </div>
         <p class="text-sm opacity-60 text-center" id="progressText">0 из 30 дней</p>
@@ -262,19 +261,91 @@
         function positionHighlight() {
             const highlight = document.getElementById('firstWeekHighlight');
             const cells = document.querySelectorAll('.grid-cell');
-            if (cells.length >= 7) {
+            const grid = document.getElementById('progressGrid');
+            
+            const now = new Date();
+            const diff = now - state.startDate;
+            const currentDayIndex = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const totalDaysTracked = currentDayIndex + 1;
+
+            let endCellIndex = -1;
+            if (totalDaysTracked < 8) {
+                endCellIndex = 6; // First 7 cells
+            } else if (totalDaysTracked < 16) {
+                endCellIndex = 14; // First 15 cells
+            }
+
+            if (endCellIndex !== -1 && cells.length > endCellIndex) {
                 const firstCell = cells[0];
-                const seventhCell = cells[6];
+                const lastCell = cells[endCellIndex];
                 
                 const gridRect = grid.getBoundingClientRect();
                 const firstRect = firstCell.getBoundingClientRect();
-                const seventhRect = seventhCell.getBoundingClientRect();
+                const lastRect = lastCell.getBoundingClientRect();
 
-                highlight.style.left = (firstRect.left - gridRect.left - 4) + 'px';
-                highlight.style.top = (firstRect.top - gridRect.top - 4) + 'px';
-                highlight.style.width = (seventhRect.right - firstRect.left + 8) + 'px';
-                highlight.style.height = (firstRect.height + 8) + 'px';
+                const offset = 4;
+                highlight.style.left = (firstRect.left - gridRect.left - offset) + 'px';
+                highlight.style.top = (firstRect.top - gridRect.top - offset) + 'px';
+                
+                const numRows = Math.ceil((endCellIndex + 1) / 10);
+                const rowHeight = firstRect.height + 8;
+                
+                if (endCellIndex < 10) {
+                    // Single row
+                    highlight.style.width = (cells[endCellIndex].getBoundingClientRect().right - firstRect.left + (offset * 2)) + 'px';
+                    highlight.style.height = (rowHeight) + 'px';
+                    
+                    const w = parseFloat(highlight.style.width);
+                    const h = parseFloat(highlight.style.height);
+                    const r = 8;
+
+                    highlight.innerHTML = `
+                        <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none" xmlns="http://www.w3.org/2000/svg" class="opacity-40">
+                            <rect x="1" y="1" width="${w-2}" height="${h-2}" rx="${r}" stroke="#3b82f6" stroke-width="2"/>
+                        </svg>
+                    `;
+                } else {
+                    // Multiple rows (e.g., 15 cells)
+                    const fullWidth = gridRect.width + (offset * 2);
+                    const fullHeight = (numRows * rowHeight);
+                    const lastCellRight = lastCell.getBoundingClientRect().right - gridRect.left + offset;
+                    
+                    highlight.style.width = fullWidth + 'px';
+                    highlight.style.height = fullHeight + 'px';
+                    
+                    const w = fullWidth;
+                    const h = fullHeight;
+                    const r = 8; // rounded-lg approximate radius
+                    const x = lastCellRight + 4; // Add extra 4px to prevent "pressing"
+                    const y = rowHeight;
+
+                    // Create SVG for perfect borders
+                    highlight.innerHTML = `
+                        <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none" xmlns="http://www.w3.org/2000/svg" class="opacity-40">
+                            <path d="
+                                M ${r+1},1 
+                                L ${w-r-1},1 
+                                Q ${w-1},1 ${w-1},${r+1} 
+                                L ${w-1},${y-r-1} 
+                                Q ${w-1},${y-1} ${w-r-1},${y-1} 
+                                L ${x+r+1},${y-1} 
+                                Q ${x+1},${y-1} ${x+1},${y+r+1} 
+                                L ${x+1},${h-r-1} 
+                                Q ${x+1},${h-1} ${x-r-1},${h-1} 
+                                L ${r+1},${h-1} 
+                                Q 1,${h-1} 1,${h-r-1} 
+                                L 1,${r+1} 
+                                Q 1,1 ${r+1},1 
+                                Z" 
+                                stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"
+                            />
+                        </svg>
+                    `;
+                }
+                
                 highlight.style.display = 'block';
+            } else {
+                highlight.style.display = 'none';
             }
         }
         
@@ -375,6 +446,7 @@
                 }
             });
             progressText.textContent = `${Math.min(totalDaysTracked, 30)} из 30 дней`;
+            positionHighlight();
         }
 
         function openEventModal(type) {
@@ -451,7 +523,21 @@
             parts.push(`${minutes} мин`);
 
             const timeStr = parts.join(' ');
-            const textToCopy = `Время и дата: ${now.toLocaleString('ru-RU')}\nСо срыва: ${timeStr}`;
+            const localTimeStr = now.toLocaleString('ru-RU');
+            
+            const toUTCFormat = (date) => {
+                const pad = (num) => String(num).padStart(2, '0');
+                const day = pad(date.getUTCDate());
+                const month = pad(date.getUTCMonth() + 1);
+                const year = date.getUTCFullYear();
+                const hours = pad(date.getUTCHours());
+                const minutes = pad(date.getUTCMinutes());
+                const seconds = pad(date.getUTCSeconds());
+                return `${day}.${month}.${year}, ${hours}:${minutes}:${seconds}`;
+            };
+            
+            const utcTimeStr = toUTCFormat(state.startDate);
+            const textToCopy = `Время (местное): ${localTimeStr}\nСрыв (UTC): ${utcTimeStr}\nСо срыва прошло: ${timeStr}`;
             
             navigator.clipboard.writeText(textToCopy).then(() => {
                 const btnText = document.getElementById('copyBtnText');
