@@ -41,10 +41,11 @@
 
         .grid-cell {
             aspect-ratio: 1;
-            border-radius: 4px;
+            border-radius: 8px;
             background-color: var(--grid-empty);
-            transition: background-color 0.5s;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
         /* Highlight for the first 7 days */
@@ -70,9 +71,46 @@
         }
 
         .grid-cell.level-0 { background-color: #10b981; } /* Green */
-        .grid-cell.level-1 { background-color: #f59e0b; } /* Orange */
-        .grid-cell.level-2 { background-color: #ef4444; } /* Red */
-        .grid-cell.level-3 { background-color: #7f1d1d; } /* Dark Red */
+        .grid-cell.level-1 { background-color: #84cc16; } /* Lime Green */
+        .grid-cell.level-2 { background-color: #eab308; } /* Yellow/Gold */
+        .grid-cell.level-3 { background-color: #f97316; } /* Orange */
+        .grid-cell.level-4 { background-color: #ef4444; } /* Red */
+        .grid-cell.level-5 { background-color: #7f1d1d; } /* Dark Red */
+        .grid-cell.level-6 { background-color: #1a0505; } /* Black-Burgundy */
+
+        .grid-cell.current-day {
+            /*border: 2px solid var(--accent-color);*/
+            animation: pulse-border 2s infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grid-cell.current-day::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent
+            );
+            animation: shimmer 2.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
 
         .safe-area-bottom {
             padding-bottom: env(safe-area-inset-bottom);
@@ -86,15 +124,64 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             z-index: 50;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .modal.open {
             display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            animation: modal-exit 0.3s ease forwards;
+        }
+
+        .modal.open .modal-content {
+            animation: modal-enter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes modal-enter {
+            from { opacity: 0; transform: scale(0.9) translateY(30px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        @keyframes modal-exit {
+            from { opacity: 1; transform: scale(1) translateY(0); }
+            to { opacity: 0; transform: scale(0.9) translateY(20px); }
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .grid-cell.newly-changed {
+            animation: cell-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes cell-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .bg-mesh {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%);
         }
 
         /* Timer Animation */
@@ -124,6 +211,7 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-6 safe-area-top safe-area-bottom">
+    <div class="bg-mesh"></div>
 
     <!-- Header / Progress Grid -->
     <header class="mb-8" style="margin-top: 35px;">
@@ -143,40 +231,47 @@
     </header>
 
     <!-- Main Timer -->
-    <main class="flex-grow flex flex-col items-center justify-center text-center">
-        <div class="mb-2 opacity-60 uppercase tracking-widest text-sm">Время битвы</div>
-        <div id="timer" class="text-[2.75rem] font-mono font-bold tabular-nums flex gap-1">
-            <span class="timer-segment" id="days-seg">00</span>:<span class="timer-segment" id="hours-seg">00</span>:<span class="timer-segment" id="mins-seg">00</span>:<span class="timer-segment" id="secs-seg">00</span>
-        </div>
-        <div class="grid grid-cols-4 w-full max-w-xs mt-2 text-[10px] uppercase opacity-40">
-            <div>Дни</div>
-            <div>Часы</div>
-            <div>Мин</div>
-            <div>Сек</div>
+    <main class="flex-grow flex flex-col items-center justify-center text-center py-12">
+        <div class="mb-4 opacity-40 uppercase tracking-[0.2em] text-[10px] font-bold">Новое время</div>
+        <div id="timer" class="text-[3.5rem] font-bold tabular-nums flex gap-2 items-baseline leading-none">
+            <div class="flex flex-col items-center">
+                <span class="timer-segment text-[3rem]" id="days-seg">00</span>
+                <span class="text-[10px] uppercase opacity-30 mt-1 font-medium tracking-widest">Дни</span>
+            </div>
+            <span class="opacity-20 self-start mt-[0.2em]">:</span>
+            <div class="flex flex-col items-center">
+                <span class="timer-segment text-[3rem]" id="hours-seg">00</span>
+                <span class="text-[10px] uppercase opacity-30 mt-1 font-medium tracking-widest">Часы</span>
+            </div>
+            <span class="opacity-20 self-start mt-[0.2em]">:</span>
+            <div class="flex flex-col items-center">
+                <span class="timer-segment text-[3rem]" id="mins-seg">00</span>
+                <span class="text-[10px] uppercase opacity-30 mt-1 font-medium tracking-widest">Мин</span>
+            </div>
+            <span class="opacity-20 self-start mt-[0.2em]">:</span>
+            <div class="flex flex-col items-center">
+                <span class="timer-segment text-[2rem] opacity-60" id="secs-seg">00</span>
+                <span class="text-[10px] uppercase opacity-30 mt-1 font-medium tracking-widest">Сек</span>
+            </div>
         </div>
     </main>
 
-    <!-- Actions -->
-    <footer class="mt-8 space-y-4">
-
-        <div id="recentEvents" class="flex justify-center">
-            <!-- Latest event will appear here -->
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <button onclick="openEventModal('шторм')" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-gray-100 dark:bg-gray-900 active:scale-95 transition-transform">
-                <i data-lucide="zap" class="text-orange-500 mb-2"></i>
-                <span class="text-sm font-medium">Шторм</span>
-            </button>
-            <button onclick="openEventModal('грусть')" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-gray-100 dark:bg-gray-900 active:scale-95 transition-transform">
-                <i data-lucide="frown" class="text-blue-500 mb-2"></i>
-                <span class="text-sm font-medium">Грусть</span>
+    <footer class="mt-8">
+        <div class="flex justify-center w-full">
+            <button onclick="showConfirm('Добавить событие слабости?', () => submitEvent('слабость'))" class="w-full max-w-xs flex items-center justify-between p-4 rounded-2xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 active:scale-95 transition-all duration-200">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center">
+                        <i data-lucide="shield-alert" class="text-yellow-500 w-5 h-5"></i>
+                    </div>
+                    <span class="text-sm font-bold tracking-tight uppercase opacity-80">Слабость</span>
+                </div>
+                <i data-lucide="chevron-right" class="opacity-20 w-5 h-5"></i>
             </button>
         </div>
     </footer>
 
-    <!-- Settings Modal -->
     <div id="settingsModal" class="modal">
-        <div class="bg-white dark:bg-gray-900 w-full max-w-sm mx-4 p-6 rounded-3xl shadow-2xl">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-sm mx-4 p-8 rounded-[2.5rem] shadow-2xl modal-content">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold">Настройки</h2>
                 <button id="closeSettings" class="p-1"><i data-lucide="x"></i></button>
@@ -207,21 +302,33 @@
         </div>
     </div>
 
-    <!-- Confirmation Modal -->
     <div id="confirmModal" class="modal">
-        <div class="bg-white dark:bg-gray-900 w-full max-w-sm mx-4 p-8 rounded-3xl shadow-2xl text-center">
-            <h2 class="text-xl font-bold mb-4">Вы уверены?</h2>
-            <p class="opacity-60 mb-8" id="confirmText">Это действие нельзя будет отменить.</p>
-            <div class="flex gap-4">
-                <button id="confirmCancel" class="flex-1 py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 font-bold">Отмена</button>
-                <button id="confirmYes" class="flex-1 py-4 rounded-2xl bg-red-500 text-white font-bold">Да</button>
+        <div class="bg-white dark:bg-gray-900 w-full max-w-xs mx-4 p-8 rounded-[2.5rem] shadow-2xl text-center modal-content border border-gray-100 dark:border-gray-800 relative overflow-hidden">
+            <!-- Decorative background element -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-500/20 to-transparent"></div>
+            
+            <div class="w-20 h-20 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6 transition-transform hover:scale-110 duration-500">
+                <div class="w-14 h-14 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center">
+                    <i data-lucide="help-circle" class="text-red-500 w-8 h-8"></i>
+                </div>
+            </div>
+            
+            <h2 class="text-2xl font-black mb-3 tracking-tight">Вы уверены?</h2>
+            <p class="text-sm leading-relaxed opacity-50 mb-10 px-2" id="confirmText">Это действие зафиксирует слабость в истории. Его нельзя будет отменить.</p>
+            
+            <div class="flex flex-col gap-3">
+                <button id="confirmYes" class="w-full py-4 rounded-2xl bg-gray-900 dark:bg-white dark:text-gray-900 text-white font-bold active:scale-95 transition-all shadow-xl shadow-black/10 hover:shadow-red-500/20">
+                    Да, подтверждаю
+                </button>
+                <button id="confirmCancel" class="w-full py-4 rounded-2xl font-bold opacity-30 hover:opacity-100 transition-all hover:bg-gray-50 dark:hover:bg-gray-800">
+                    Отмена
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Event Level Modal -->
     <div id="eventModal" class="modal">
-        <div class="bg-white dark:bg-gray-900 w-full max-w-sm mx-4 p-8 rounded-3xl shadow-2xl text-center">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-sm mx-4 p-8 rounded-[2.5rem] shadow-2xl text-center modal-content">
             <h2 class="text-xl font-bold mb-6" id="eventModalTitle">Уровень интенсивности</h2>
             <div class="space-y-4">
                 <button onclick="submitEvent('средняя')" class="w-full py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 font-bold active:scale-95 transition-transform">Средняя</button>
@@ -359,7 +466,6 @@
         const confirmModal = document.getElementById('confirmModal');
         const eventModal = document.getElementById('eventModal');
         const startDateInput = document.getElementById('startDateInput');
-        const recentEventsDiv = document.getElementById('recentEvents');
 
         let pendingEventType = null;
         let confirmCallback = null;
@@ -381,7 +487,6 @@
 
             updateTimerDisplay(days, hours, minutes, seconds);
             updateGrid(diff);
-            renderEvents();
         }
 
         function updateTimerDisplay(d, h, m, s) {
@@ -421,7 +526,12 @@
             const totalDaysTracked = currentDayIndex + 1;
 
             cells.forEach((cell, i) => {
+                const isCurrent = i === currentDayIndex && i < 30;
                 cell.className = 'grid-cell'; // Reset classes
+                if (isCurrent) {
+                    cell.classList.add('current-day');
+                }
+                
                 if (i < totalDaysTracked && i < 30) {
                     // Calculate "badness" for this specific day
                     const dayStart = new Date(state.startDate.getTime() + i * 24 * 60 * 60 * 1000);
@@ -434,15 +544,24 @@
 
                     let score = 0;
                     dayEvents.forEach(e => {
-                        score += (e.intensity === 'сильная' ? 2 : 1);
+                        score += 1;
                     });
 
-                    let level = 0; // Green
-                    if (score >= 6) level = 3; // Dark Red
-                    if (score >= 4) level = 2; // Red
-                    if (score >= 2) level = 1; // Orange
+                    let level = 0; 
+                    if (score >= 6) level = 6;
+                    else if (score >= 5) level = 5;
+                    else if (score >= 4) level = 4;
+                    else if (score >= 3) level = 3;
+                    else if (score >= 2) level = 2;
+                    else if (score >= 1) level = 1;
 
                     cell.classList.add(`level-${level}`);
+                    
+                    // If it's current day and has events, level-X will override current-day's background
+                    // So we might want to preserve shimmer/pulse-border
+                    if (isCurrent) {
+                        cell.classList.add('current-day');
+                    }
                 }
             });
             progressText.textContent = `${Math.min(totalDaysTracked, 30)} из 30 дней`;
@@ -455,36 +574,43 @@
             eventModal.classList.add('open');
         }
 
-        function submitEvent(intensity) {
+        function submitEvent(type) {
             state.events.unshift({
-                type: pendingEventType,
-                intensity: intensity,
+                type: type,
+                intensity: 'обычная',
                 time: new Date().toISOString()
             });
-            state.events = state.events.slice(0, 50); // Store more but display only one
+            state.events = state.events.slice(0, 50);
             saveState();
             closeModal('eventModal');
             updateUI();
+            
+            // Add animation to the current day cell
+            const now = new Date();
+            const diff = now - state.startDate;
+            const currentDayIndex = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const cells = document.querySelectorAll('.grid-cell');
+            if (cells[currentDayIndex]) {
+                cells[currentDayIndex].classList.add('newly-changed');
+                setTimeout(() => cells[currentDayIndex].classList.remove('newly-changed'), 500);
+            }
         }
 
         function closeModal(id) {
-            document.getElementById(id).classList.remove('open');
+            const m = document.getElementById(id);
+            m.classList.remove('open');
+            setTimeout(() => {
+                if (!m.classList.contains('open')) {
+                    // Actual hiding happens via display: none if we wanted, 
+                    // but since we use display: none/flex in CSS class 'open', 
+                    // we need to handle the timing if we want fade out.
+                    // For now, simple removal of 'open' class handles it via opacity.
+                }
+            }, 300);
         }
 
         function renderEvents() {
-            if (state.events.length === 0) {
-                recentEventsDiv.innerHTML = '';
-                return;
-            }
-            const e = state.events[0];
-            const icon = e.type === 'шторм' ? '⚡️' : '☹️';
-            recentEventsDiv.innerHTML = `
-                <div class="flex gap-2 items-center text-xs opacity-60 bg-gray-50 dark:bg-gray-900/50 px-4 py-2 rounded-full">
-                    <span class="font-bold">${icon} ${e.type} (${e.intensity})</span>
-                    <span>•</span>
-                    <span>${new Date(e.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                </div>
-            `;
+            // Function removed as per requirement
         }
 
         // Events
