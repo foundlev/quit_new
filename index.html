@@ -633,37 +633,30 @@
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-            const getPlural = (n, forms) => {
-                const pr = new Intl.PluralRules('ru-RU');
-                const rule = pr.select(n);
-                switch (rule) {
-                    case 'one': return forms[0];
-                    case 'few': return forms[1];
-                    default: return forms[2];
-                }
+            const getDayPhase = (date) => {
+                const h = date.getHours();
+                if (h >= 4 && h < 6) return 'раннее утро';
+                if (h >= 6 && h < 11) return 'утро';
+                if (h >= 11 && h < 12) return 'позднее утро';
+                if (h >= 12 && h < 17) return 'день';
+                if (h >= 17 && h < 19) return 'ближе к вечеру';
+                if (h >= 19 && h < 23) return 'вечер';
+                return 'ночь';
             };
 
-            let parts = [];
-            if (days > 0) parts.push(`${days} ${getPlural(days, ['день', 'дня', 'дней'])}`);
-            if (hours > 0 || days > 0) parts.push(`${hours} ${getPlural(hours, ['час', 'часа', 'часов'])}`);
-            parts.push(`${minutes} мин`);
-
-            const timeStr = parts.join(' ');
-            const localTimeStr = now.toLocaleString('ru-RU');
-            
-            const toUTCFormat = (date) => {
-                const pad = (num) => String(num).padStart(2, '0');
-                const day = pad(date.getUTCDate());
-                const month = pad(date.getUTCMonth() + 1);
-                const year = date.getUTCFullYear();
-                const hours = pad(date.getUTCHours());
-                const minutes = pad(date.getUTCMinutes());
-                const seconds = pad(date.getUTCSeconds());
-                return `${day}.${month}.${year}, ${hours}:${minutes}:${seconds}`;
+            const formatDate = (date) => {
+                const months = [
+                    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+                    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+                ];
+                return `${date.getDate()} ${months[date.getMonth()]}`;
             };
+
+            const dayPhase = getDayPhase(now);
+            const formattedDate = formatDate(now);
+            const durationStr = `${days} дн ${hours} ч ${minutes} мин`;
             
-            const utcTimeStr = toUTCFormat(state.startDate);
-            const textToCopy = `Время (местное): ${localTimeStr}\nСрыв (UTC): ${utcTimeStr}\nСо срыва прошло: ${timeStr}`;
+            const textToCopy = `${formattedDate}, ${dayPhase} | ${durationStr}`;
             
             navigator.clipboard.writeText(textToCopy).then(() => {
                 const btnText = document.getElementById('copyBtnText');

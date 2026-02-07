@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sila90-v2';
+const CACHE_NAME = 'sila90-v3';
 const ASSETS = [
     '/', '/index.html', '/manifest.webmanifest',
 
