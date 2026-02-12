@@ -70,13 +70,21 @@
             white-space: nowrap;
         }
 
-        .grid-cell.level-0 { background-color: #10b981; } /* Green */
+        .grid-cell.level-0 { background-color: #10b981; } /* Green - Neutral/Success */
         .grid-cell.level-1 { background-color: #84cc16; } /* Lime Green */
         .grid-cell.level-2 { background-color: #eab308; } /* Yellow/Gold */
         .grid-cell.level-3 { background-color: #f97316; } /* Orange */
         .grid-cell.level-4 { background-color: #ef4444; } /* Red */
         .grid-cell.level-5 { background-color: #7f1d1d; } /* Dark Red */
         .grid-cell.level-6 { background-color: #1a0505; } /* Black-Burgundy */
+
+        /* Positive levels (Strength) */
+        .grid-cell.level-p1 { background-color: #60a5fa; } /* Blue 400 */
+        .grid-cell.level-p2 { background-color: #3b82f6; } /* Blue 500 */
+        .grid-cell.level-p3 { background-color: #2563eb; } /* Blue 600 */
+        .grid-cell.level-p4 { background-color: #1d4ed8; } /* Blue 700 */
+        .grid-cell.level-p5 { background-color: #1e40af; } /* Blue 800 */
+        .grid-cell.level-p6 { background-color: #1e3a8a; } /* Blue 900 */
 
         .grid-cell.current-day {
             /*border: 2px solid var(--accent-color);*/
@@ -257,15 +265,25 @@
     </main>
 
     <footer class="mt-8">
-        <div class="flex justify-center w-full">
-            <button onclick="showConfirm('Добавить событие слабости?', () => submitEvent('слабость'))" class="w-full max-w-xs flex items-center justify-between p-4 rounded-2xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 active:scale-95 transition-all duration-200">
-                <div class="flex items-center gap-4">
+        <div class="flex flex-row justify-center items-center gap-4 w-full max-w-2xl mx-auto">
+            <button onclick="showConfirm('Добавить событие слабости?', () => submitEvent('слабость'))" class="flex-1 flex items-center justify-between p-4 rounded-2xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 active:scale-95 transition-all duration-200">
+                <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center">
                         <i data-lucide="shield-alert" class="text-yellow-500 w-5 h-5"></i>
                     </div>
-                    <span class="text-sm font-bold tracking-tight uppercase opacity-80">Слабость</span>
+                    <span class="text-xs sm:text-sm font-bold tracking-tight uppercase opacity-80">Слабость</span>
                 </div>
-                <i data-lucide="chevron-right" class="opacity-20 w-5 h-5"></i>
+                <i data-lucide="chevron-right" class="opacity-20 w-4 h-4 sm:w-5 sm:h-5"></i>
+            </button>
+
+            <button onclick="showConfirm('Добавить событие силы?', () => submitEvent('сила'))" class="flex-1 flex items-center justify-between p-4 rounded-2xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 active:scale-95 transition-all duration-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                        <i data-lucide="shield-check" class="text-blue-500 w-5 h-5"></i>
+                    </div>
+                    <span class="text-xs sm:text-sm font-bold tracking-tight uppercase opacity-80">Сила</span>
+                </div>
+                <i data-lucide="chevron-right" class="opacity-20 w-4 h-4 sm:w-5 sm:h-5"></i>
             </button>
         </div>
     </footer>
@@ -544,18 +562,23 @@
 
                     let score = 0;
                     dayEvents.forEach(e => {
-                        score += 1;
+                        if (e.type === 'сила') {
+                            score -= 1; // Strength reduces badness
+                        } else {
+                            score += 1; // Weakness (or anything else) increases badness
+                        }
                     });
 
-                    let level = 0; 
-                    if (score >= 6) level = 6;
-                    else if (score >= 5) level = 5;
-                    else if (score >= 4) level = 4;
-                    else if (score >= 3) level = 3;
-                    else if (score >= 2) level = 2;
-                    else if (score >= 1) level = 1;
+                    let levelClass = 'level-0';
+                    if (score > 0) {
+                        let level = Math.min(score, 6);
+                        levelClass = `level-${level}`;
+                    } else if (score < 0) {
+                        let level = Math.min(Math.abs(score), 6);
+                        levelClass = `level-p${level}`;
+                    }
 
-                    cell.classList.add(`level-${level}`);
+                    cell.classList.add(levelClass);
                     
                     // If it's current day and has events, level-X will override current-day's background
                     // So we might want to preserve shimmer/pulse-border
