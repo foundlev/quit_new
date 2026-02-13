@@ -603,6 +603,11 @@
                 intensity: 'обычная',
                 time: new Date().toISOString()
             });
+            state.events.unshift({
+                type: type,
+                intensity: 'обычная',
+                time: new Date().toISOString()
+            });
             state.events = state.events.slice(0, 50);
             saveState();
             closeModal('eventModal');
